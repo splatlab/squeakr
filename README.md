@@ -19,16 +19,16 @@ modification.
 API
 --------
 * 'main': count k-mers in a read dataset
-* 'query': query for random k-mers
-* 'de-bruijn': de-bruin graph traversal code
 * 'inner-prod': compute inner products of two Squeakr representations
 
 Build
 -------
 This library depends on libssl and boost.
 
+```bash
  $ make main
  $ ./main 0 20 1 test.fastq
+```
 
  Following are the argumenrs to main:
  - file format: 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq
@@ -36,8 +36,10 @@ This library depends on libssl and boost.
  - num of threads: number of threads to count
  - file(s): "filename" or "dirname/*" for all the files in a directory
 
+```bash
  $ make inner-prod
  $ ./inner-prod file1 file2
+```
  
  Following are the argumenrs to inner-prod:
  - file1: dataset 1 Squeakr representation
