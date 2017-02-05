@@ -37,6 +37,8 @@ This library depends on libssl and boost.
  - num of threads: number of threads to count
  - file(s): "filename" or "dirname/*" for all the files in a directory
 
+The main program creates a files with the extension ".ser" which is the k-mer representation.
+
 ```bash
  $ make query
  $ ./main test.fastq.ser 10000 0
