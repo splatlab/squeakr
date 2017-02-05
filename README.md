@@ -4,7 +4,7 @@ Squeakr: An Exact and Approximate k -mer Counting System
 Overview
 --------
 
-Squeakr a k-mer-counting and multiset-representation system using the
+Squeakr is a k-mer-counting and multiset-representation system using the
 recently-introduced counting quotient filter (CQF) Pandey et al. (2017), a
 feature-rich approximate membership query (AMQ) data structure.
 
