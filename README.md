@@ -44,7 +44,7 @@ The main program creates a files with the extension ".ser" which is the k-mer re
  $ ./main test.fastq.ser 10000 0
 ```
 
- Following are the argumenrs to main:
+ Following are the argumenrs to query:
  - file: dataset Squeakr representation
  - num of queries: number of queries
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
