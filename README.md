@@ -1,5 +1,5 @@
-# cqf
-A General-Purpose Counting Filter: Counting Quotient Filter (CQF)
+# squeakr
+Squeakr: An Exact and Approximate k -mer Counting System
 
 Overview
 --------
