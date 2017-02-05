@@ -19,6 +19,7 @@ modification.
 API
 --------
 * 'main': count k-mers in a read dataset
+* 'query': query k-mers in the Squeakr representation
 * 'inner-prod': compute inner products of two Squeakr representations
 
 Build
@@ -35,6 +36,16 @@ This library depends on libssl and boost.
  - CQF size: the log of the number of slots in the CQF
  - num of threads: number of threads to count
  - file(s): "filename" or "dirname/*" for all the files in a directory
+
+```bash
+ $ make query
+ $ ./main test.fastq.ser 10000 0
+```
+
+ Following are the argumenrs to main:
+ - file: dataset Squeakr representation
+ - num of queries: number of queries
+ - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
 ```bash
  $ make inner-prod
