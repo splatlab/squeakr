@@ -20,8 +20,8 @@
 #include <fstream>
 #include <stdio.h>
 
-#include "libs/zlib.h"
-#include "libs/bzlib.h"
+#include <zlib.h>
+#include <bzlib.h>
 
 #ifndef _READER_H_
 #define _READER_H_

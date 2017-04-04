@@ -1,29 +1,68 @@
+TARGETS=main kmer_query kmer_inner_prod
+
+ifdef D
+	DEBUG=-g
+	OPT=
+else
+	DEBUG=
+	OPT=-Ofast
+endif
+
+ifdef NH
+	ARCH=
+else
+	ARCH=-msse4.2 -D__SSE4_2_
+endif
+
+ifdef P
+	PROFILE=-pg -no-pie # for bug in gprof.
+endif
+
 CXX = g++ -std=c++11
+CC = g++ -std=c++11
+LD= g++ -std=c++11
 
-#CXXFLAGS = -Wall -g -I. -pthread -Wno-unused-result -Wno-strict-aliasing
-#CXXFLAGS = -Wall -Ofast -m64 -I. -Wno-unused-result -Wno-strict-aliasing -DLOG_WAIT_TIME -DLOG_CLUSTER_LENGTH
-CXXFLAGS = -Wall -Ofast -m64 -I. -Wno-unused-result -Wno-strict-aliasing
+CXXFLAGS = -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -Wno-unused-result -Wno-strict-aliasing -Wno-unused-function
 
-LDFLAGS = -lpthread -lssl -lcrypto -lboost_system -lboost_thread
-LIBS = libs/libbz2.a libs/libz.a
+LDFLAGS = $(DEBUG) $(PROFILE) $(OPT) -lpthread -lssl -lcrypto -lboost_system -lboost_thread -lm -lbz2 -lz
 
-TARGET_MAIN	= main
-MAIN_SRC = main.cc hashutil.cc threadsafe-gqf/gqf.c
+#
+# declaration of dependencies
+#
 
-TARGET_QUERY	= query
-QUERY_SRC = kmer_query.cc hashutil.cc threadsafe-gqf/gqf.c
+all: $(TARGETS)
 
-TARGET_INNER_PROD = inner-prod
-INNER_PROD_SRC = kmer_inner_prod.cc hashutil.cc threadsafe-gqf/gqf.c
+# dependencies between programs and .o files
 
-$(TARGET_MAIN): $(MAIN_SRC)
-	$(CXX) $(CXXFLAGS) $(MAIN_SRC) $(INCLUDE) $(LDFLAGS) $(LIBS) -o $@
+main:                  main.o 								 hashutil.o threadsafe-gqf/gqf.o
+kmer_query: 					 kmer_query.o 					 hashutil.o threadsafe-gqf/gqf.o
+kmer_inner_prod: 			 kmer_inner_prod.o 			 hashutil.o threadsafe-gqf/gqf.o
 
-$(TARGET_QUERY): $(QUERY_SRC)
-	$(CXX) $(CXXFLAGS) $(QUERY_SRC) $(INCLUDE) $(LDFLAGS) $(LIBS) -o $@
+# dependencies between .o files and .h files
 
-$(TARGET_INNER_PROD): $(INNER_PROD_SRC)
-	$(CXX) $(CXXFLAGS) $(INNER_PROD_SRC) $(INCLUDE) $(LDFLAGS) $(LIBS) -o $@
+main.o: 								 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h reader.h
+kmer_query.o: 					 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h
+kmer_inner_prod.o: 			 									threadsafe-gqf/gqf.h hashutil.h
+hashutil.o: 																									 hashutil.h
+
+# dependencies between .o files and .cc (or .c) files
+
+%.o: %.cc
+threadsafe-gqf/gqf.o: threadsafe-gqf/gqf.c threadsafe-gqf/gqf.h
+
+#
+# generic build rules
+#
+
+$(TARGETS):
+	$(LD) $^ $(LDFLAGS) -o $@
+
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -c -o $@
+
+%.o: %.c
+	$(CC) $(CXXFLAGS) $(INCLUDE) $< -c -o $@
 
 clean:
-	rm -f $(TARGET_MAIN) $(TARGET_QUERY) $(TARGET_INNER_PROD) *.o core
+	rm -f *.o threadsafe-gqf/gqf.o $(TARGETS)
+

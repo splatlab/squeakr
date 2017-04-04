@@ -43,8 +43,8 @@
 #include "chunk.h"
 #include "kmer.h"
 
-#include "libs/zlib.h"
-#include "libs/bzlib.h"
+#include <zlib.h>
+#include <bzlib.h>
 
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) - 1ULL)
 
