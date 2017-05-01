@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdlib.h>
 #if 0
 # include <assert.h>
@@ -1523,11 +1524,13 @@ void qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits,
 			perror("Couldn't open file:\n");
 			exit(EXIT_FAILURE);
 		}
+#if HAVE_FALLOCATE
 		ret = fallocate(qf->mem->fd, 0, 0, size+sizeof(qfmetadata));
 		if (ret < 0) {
-			perror("Couldn't fallocate file:\n");
+			perror("Couldn't posix_fallocate file:\n");
 			exit(EXIT_FAILURE);
 		}
+#endif
 		qf->metadata = (qfmetadata *)mmap(NULL, size+sizeof(qfmetadata), PROT_READ |
 																			PROT_WRITE, MAP_SHARED, qf->mem->fd, 0);
 
