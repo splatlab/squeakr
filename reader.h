@@ -32,10 +32,10 @@ namespace kmercounting {
 	class reader {
 		public:
 			reader();
-			reader(FILE *in, gzFile_s *in_gzip, BZFILE *in_bzip2, int bzerror);
+			reader(FILE *in, gzFile in_gzip, BZFILE *in_bzip2, int bzerror);
 
 			FILE *in = nullptr;
-			gzFile_s *in_gzip = nullptr;
+			gzFile in_gzip = nullptr;
 			BZFILE *in_bzip2 = nullptr;
 			int bzerror;
 	};
@@ -48,7 +48,7 @@ namespace kmercounting {
 		bzerror = 0;
 	}
 
-	reader::reader(FILE *_in, gzFile_s *_in_gzip, BZFILE *_in_bzip2, int _bzerror)
+	reader::reader(FILE *_in, gzFile _in_gzip, BZFILE *_in_bzip2, int _bzerror)
 	{
 		in = _in;
 		in_gzip = _in_gzip;
