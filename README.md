@@ -35,7 +35,7 @@ Squeakr currently only supports fastq files. If any other file formats are passe
 throw a segmentation fault.
 
 The CQF code uses two new instructions to implement select on machine words introduced in intel's Haswell line of CPUs. However, there is also an alternate implementation of select on machine words to work on CPUs older than Haswell.
-To build on an older hardare (older than Haswell) use "NH=1" as a make argument.
+To build on an older hardware (older than Haswell) use "NH=1" as a make argument.
 
 ```bash
  $ make main
