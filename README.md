@@ -62,7 +62,7 @@ The main program creates a files with the extension ".ser" which is the k-mer re
 
 ```bash
  $ make kmer_inner_prod
- $ ./kmer_inner_prod file1 file2
+ $ ./kmer_inner_prod test.fastq.ser test.fastq.ser
 ```
  
  Following are the arguments to inner-prod:
