@@ -51,7 +51,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 The main program creates a files with the extension ".ser" which is the k-mer representation.
 
 ```bash
- $ make query
+ $ make kmer_query
  $ ./kmer_query test.fastq.ser 10000 0
 ```
 
@@ -61,7 +61,7 @@ The main program creates a files with the extension ".ser" which is the k-mer re
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
 ```bash
- $ make inner-prod
+ $ make kmer_inner_prod
  $ ./kmer_inner_prod file1 file2
 ```
  
