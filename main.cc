@@ -42,14 +42,14 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 
+#include "murmurHash3.h"
 #include "threadsafe-gqf/gqf.h"
 #include "hashutil.h"
 #include "chunk.h"
 #include "kmer.h"
 #include "reader.h"
 
-#define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) \
-												- 1ULL)
+#define BITMASK(nbits) (((__int128_t)1 << (nbits)) - 1ULL)
 #define QBITS_LOCAL_QF 16
 #define SPARE_EMPTY_LOCAL_QFS 16
 
@@ -252,9 +252,9 @@ start_read:
 		if (read.length() < K) // start with the next read if length is smaller than K
 			goto next_read;
 		{
-			uint64_t first = 0;
-			uint64_t first_rev = 0;
-			uint64_t item = 0;
+			__int128_t first = 0;
+			__int128_t first_rev = 0;
+			__uint128_t item = 0;
 			//cout << "K " << read.substr(0,K) << endl;
 			for(int i=0; i<K; i++) { //First kmer
 				uint8_t curr = kmer::map_base(read[i]);
@@ -277,8 +277,12 @@ start_read:
 				item = first_rev;
 
 			// hash the kmer using murmurhash/xxHash before adding to the list
-			item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																		 obj->local_qf->metadata->seed);
+			__int128_t item_hash;
+			MurmurHash3_x64_128 (((void*)&item), sizeof(item),
+													 obj->local_qf->metadata->seed, ((void *)&item_hash));
+			item = item_hash;
+			//item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
+																		 //obj->local_qf->metadata->seed);
 			/*
 			 * first try and insert in the main QF.
 			 * If lock can't be accuired in the first attempt then
@@ -297,8 +301,8 @@ start_read:
 			}
 			//cout<< "X " << bitset<64>(first)<<endl;
 
-			uint64_t next = (first << 2) & BITMASK(2*K);
-			uint64_t next_rev = first_rev >> 2;
+			__uint128_t next = (first << 2) & BITMASK(2*K);
+			__uint128_t next_rev = first_rev >> 2;
 
 			for(uint32_t i=K; i<read.length(); i++) { //next kmers
 				//cout << "K: " << read.substr(i-K+1,K) << endl;
@@ -308,7 +312,7 @@ start_read:
 					goto start_read;
 				}
 				next |= curr;
-				uint64_t tmp = kmer::reverse_complement_base(curr);
+				__int128_t tmp = kmer::reverse_complement_base(curr);
 				tmp <<= (K*2-2);
 				next_rev = next_rev | tmp;
 				if (kmer::compare_kmers(next, next_rev))
@@ -316,9 +320,13 @@ start_read:
 				else
 					item = next_rev;
 
-			// hash the kmer using murmurhash/xxHash before adding to the list
-				item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																			 obj->local_qf->metadata->seed);
+				// hash the kmer using murmurhash/xxHash before adding to the list
+				__int128_t item_hash;
+				MurmurHash3_x64_128 (((void*)&item), sizeof(item),
+														 obj->local_qf->metadata->seed, ((void *)&item_hash));
+				item = item_hash;
+				//item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
+																			 //obj->local_qf->metadata->seed);
 				//item = XXH63 (((void*)&item), sizeof(item), seed);
 
 				/*
@@ -536,4 +544,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
