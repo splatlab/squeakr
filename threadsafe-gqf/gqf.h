@@ -2,6 +2,7 @@
 #define QF_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <pthread.h>
 
 #ifdef __cplusplus
