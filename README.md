@@ -9,18 +9,21 @@ recently-introduced counting quotient filter (CQF) Pandey et al. (2017), a
 feature-rich approximate membership query (AMQ) data structure.
 
 Squeakr is memory-efficient, consuming 1.5X–4.3X less memory than the
-state-of-the-art. It offers competitive counting performance, and answers
-queries about a particular k-mer over an order-of- magnitude faster than other
-systems. The Squeakr representation of the k-mer multiset turns out to be
-immediately useful for downstream processing (e.g., De Bruijn graph traversal)
-because it supports fast queries and dynamic k-mer insertion, deletion, and
-modification.
+state-of-the-art. It offers competitive counting performance, in fact, it is
+faster for larger k-mers, and answers queries about a particular k-mer over an
+order-of- magnitude faster than other systems. The Squeakr representation of the
+k-mer multiset turns out to be immediately useful for downstream processing
+(e.g., De Bruijn graph traversal) because it supports fast queries and dynamic
+k-mer insertion, deletion, and modification.
+
+k-mer counts can be validated by hooking into the C++ level query API. An
+example query program is also available in "kmer_query.cc".
 
 API
 --------
-* 'main': count k-mers in a read dataset
-* 'query': query k-mers in the Squeakr representation
-* 'inner-prod': compute inner products of two Squeakr representations
+* 'main': count k-mers in a read dataset.
+* 'query': query k-mers in the Squeakr representation.
+* 'inner-prod': compute inner products of two Squeakr representations.
 
 Build
 -------
@@ -51,7 +54,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 The main program creates a files with the extension ".ser" which is the k-mer representation.
 
 ```bash
- $ make query
+ $ make kmer_query
  $ ./kmer_query test.fastq.ser 10000 0
 ```
 
@@ -61,7 +64,7 @@ The main program creates a files with the extension ".ser" which is the k-mer re
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
 ```bash
- $ make inner-prod
+ $ make kmer_inner-prod
  $ ./kmer_inner_prod file1 file2
 ```
  
