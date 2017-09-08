@@ -45,7 +45,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
  $ ./main 0 20 1 test.fastq
 ```
 
- Following are the argumenrs to main:
+ Following are the arguments to main:
  - file format: 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq
  - CQF size: the log of the number of slots in the CQF
  - num of threads: number of threads to count
@@ -58,7 +58,7 @@ The main program creates a files with the extension ".ser" which is the k-mer re
  $ ./kmer_query test.fastq.ser 10000 0
 ```
 
- Following are the argumenrs to query:
+ Following are the arguments to query:
  - file: dataset Squeakr representation
  - num of queries: number of queries
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
@@ -68,7 +68,7 @@ The main program creates a files with the extension ".ser" which is the k-mer re
  $ ./kmer_inner_prod file1 file2
 ```
  
- Following are the argumenrs to inner-prod:
+ Following are the arguments to inner-prod:
  - file1: dataset 1 Squeakr representation
  - file2: dataset 2 Squeakr representation
 
