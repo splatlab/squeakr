@@ -34,10 +34,12 @@ Library dependencies (given version or higher):
  - zlib1g-dev 1:1.2.8.dfsg-2ubuntu4
  - bzip2 1.0.6-8
 
-Squeakr currently only supports fastq files. If any other file formats are passed as input then it will 
-throw a segmentation fault.
+Squeakr currently only supports fastq files. If any other file formats are
+passed as input then it will throw a segmentation fault.
 
-The CQF code uses two new instructions to implement select on machine words introduced in intel's Haswell line of CPUs. However, there is also an alternate implementation of select on machine words to work on CPUs older than Haswell.
+The CQF code uses two new instructions to implement select on machine words
+introduced in intel's Haswell line of CPUs. However, there is also an alternate
+implementation of select on machine words to work on CPUs older than Haswell.
 To build on an older hardware (older than Haswell) use "NH=1" as a make argument.
 
 ```bash
