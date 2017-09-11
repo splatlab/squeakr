@@ -34,7 +34,7 @@ all: $(TARGETS)
 
 # dependencies between programs and .o files
 
-main:                  main.o 								 murmurHash3.o hashutil.o threadsafe-gqf/gqf.o
+main:                  main.o 							hashutil.o threadsafe-gqf/gqf.o
 kmer_query: 					 kmer_query.o 					 hashutil.o threadsafe-gqf/gqf.o
 kmer_inner_prod: 			 kmer_inner_prod.o 			 hashutil.o threadsafe-gqf/gqf.o
 
@@ -44,7 +44,6 @@ main.o: 								 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h reader.
 kmer_query.o: 					 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h
 kmer_inner_prod.o: 			 									threadsafe-gqf/gqf.h hashutil.h
 hashutil.o: 																									 hashutil.h
-murmurHash3.o: 																								 murmurHash3.h
 
 # dependencies between .o files and .cc (or .c) files
 
