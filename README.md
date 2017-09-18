@@ -21,9 +21,9 @@ example query program is also available in "kmer_query.cc".
 
 API
 --------
-* 'main': count k-mers in a read dataset.
-* 'query': query k-mers in the Squeakr representation.
-* 'inner-prod': compute inner products of two Squeakr representations.
+* 'squeakr-count': count k-mers in a read dataset.
+* 'squeakr-query': query k-mers in the Squeakr representation.
+* 'squeakr-inner-prod': compute inner products of two Squeakr representations.
 
 Build
 -------
@@ -43,34 +43,34 @@ implementation of select on machine words to work on CPUs older than Haswell.
 To build on an older hardware (older than Haswell) use "NH=1" as a make argument.
 
 ```bash
- $ make main
- $ ./main 0 20 1 test.fastq
+ $ make squeakr-count
+ $ ./squeakr-count 0 20 1 test.fastq
 ```
 
- Following are the arguments to main:
+ Following are the arguments to squeakr-count:
  - file format: 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq
  - CQF size: the log of the number of slots in the CQF
  - num of threads: number of threads to count
  - file(s): "filename" or "dirname/*" for all the files in a directory
 
-The main program creates a files with the extension ".ser" which is the k-mer representation.
+squeakr-count creates a files with the extension ".ser" which is the k-mer representation.
 
 ```bash
- $ make kmer_query
- $ ./kmer_query test.fastq.ser 10000 0
+ $ make squeakr-query
+ $ ./squeakr-query test.fastq.ser 10000 0
 ```
 
- Following are the arguments to query:
+ Following are the arguments to squeakr-query:
  - file: dataset Squeakr representation
  - num of queries: number of queries
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
 ```bash
- $ make kmer_inner-prod
- $ ./kmer_inner_prod file1 file2
+ $ make squeakr-inner-prod
+ $ ./squeakr-inner-prod file1 file2
 ```
  
- Following are the arguments to inner-prod:
+ Following are the arguments to squeakr-inner-prod:
  - file1: dataset 1 Squeakr representation
  - file2: dataset 2 Squeakr representation
 

@@ -92,6 +92,18 @@ int main ( int argc, char *argv[] )
 {
 	QF cf;
 	QFi cfi;
+
+	if (argc == 2) {
+		string arg_help(argv[1]);
+		if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
+			cout << "./squeakr-query [OPTIONS]" << endl
+				   << "file          : dataset Squeakr representation" << endl
+					 << "num of queries: number of queries" << endl
+					 << "random        : 0 - query for existing k-mers, 1 - query for random k-mers" << endl;
+			exit(0);
+		}
+	}
+
 	string ds_file = argv[1];
 	uint32_t num_query = atoi(argv[2]);
 	int random = atoi(argv[3]);

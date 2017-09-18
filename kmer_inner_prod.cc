@@ -60,6 +60,17 @@ void print_time_elapsed(string desc, struct timeval* start, struct timeval* end)
 int main ( int argc, char *argv[] )
 {
 	QF cfa, cfb;
+	
+	if (argc == 2) {
+		string arg_help(argv[1]);
+		if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
+			cout << "./squeakr-inner-product [OPTIONS]" << endl
+				   << "file1: dataset 1 Squeakr representation" << endl
+					 << "file2: dataset 2 Squeakr representation" << endl;
+			exit(0);
+		}
+	}
+
 	string ds_filea = argv[1];
 	string ds_fileb = argv[2];
 	uint64_t inner_prod;
