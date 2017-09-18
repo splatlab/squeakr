@@ -18,13 +18,13 @@ ifdef P
 	PROFILE=-pg -no-pie # for bug in gprof.
 endif
 
-CXX = g++ -std=c++11
-CC = g++ -std=c++11
-LD= g++ -std=c++11
+CXX = c++ -std=c++11
+CC = c++ -std=c++11
+LD= c++ -std=c++11
 
-CXXFLAGS = -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare
+CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare
 
-LDFLAGS = $(DEBUG) $(PROFILE) $(OPT) -lpthread -lssl -lcrypto -lboost_system -lboost_thread -lm -lbz2 -lz
+LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lssl -lcrypto -lboost_system -lboost_thread -lm -lbz2 -lz
 
 #
 # declaration of dependencies
