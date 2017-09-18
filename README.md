@@ -67,12 +67,12 @@ squeakr-count creates a files with the extension ".ser" which is the k-mer repre
 
 ```bash
  $ make squeakr-inner-prod
- $ ./squeakr-inner-prod file1 file2
+ $ ./squeakr-inner-prod test.fastq.ser test.fastq.ser
 ```
  
  Following are the arguments to squeakr-inner-prod:
- - file1: dataset 1 Squeakr representation
- - file2: dataset 2 Squeakr representation
+ - test.fastq.ser: dataset 1 Squeakr representation
+ - test.fastq.ser: dataset 2 Squeakr representation
 
 Contributing
 ------------
