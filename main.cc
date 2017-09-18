@@ -435,6 +435,19 @@ int main(int argc, char *argv[])
 	QF cf;
 	QFi cfi;
 	QF local_qfs[50];
+
+	if (argc == 2) {
+		string arg_help(argv[1]);
+		if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
+			cout << "./squeakr-count [OPTIONS]" << endl
+				   << "file format   : 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq" << endl
+					 << "CQF size      : the log of the number of slots in the CQF" << endl
+					 << "num of threads: number of threads to count" << endl
+					 << "file(s)       : \"filename\" or \"dirname/*\" for all the files in a directory" << endl;
+			exit(0);
+		}
+	}
+
 	int mode = atoi(argv[1]);
 	int qbits = atoi(argv[2]);
 	int numthreads = atoi(argv[3]);

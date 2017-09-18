@@ -1,4 +1,4 @@
-TARGETS=main kmer_query kmer_inner_prod
+TARGETS= squeakr-count squeakr-query squeakr-inner-prod
 
 ifdef D
 	DEBUG=-g
@@ -34,9 +34,9 @@ all: $(TARGETS)
 
 # dependencies between programs and .o files
 
-main:                  main.o 								 murmurHash3.o hashutil.o threadsafe-gqf/gqf.o
-kmer_query: 					 kmer_query.o 					 hashutil.o threadsafe-gqf/gqf.o
-kmer_inner_prod: 			 kmer_inner_prod.o 			 hashutil.o threadsafe-gqf/gqf.o
+squeakr-count:                  main.o 								 murmurHash3.o hashutil.o threadsafe-gqf/gqf.o
+squeakr-query: 					 kmer_query.o 					 hashutil.o threadsafe-gqf/gqf.o
+squeakr-inner-prod: 			 kmer_inner_prod.o 			 hashutil.o threadsafe-gqf/gqf.o
 
 # dependencies between .o files and .h files
 
