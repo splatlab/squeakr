@@ -1634,18 +1634,22 @@ void qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits,
 		qf->blocks = (qfblock *)calloc(size, 1);
 
 	} else {
-		int ret;
 
 		qf->mem->fd = open(path, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
 		if (qf->mem->fd < 0) {
 			perror("Couldn't open file:\n");
 			exit(EXIT_FAILURE);
 		}
-		ret = fallocate(qf->mem->fd, 0, 0, size+sizeof(qfmetadata));
-		if (ret < 0) {
-			perror("Couldn't fallocate file:\n");
-			exit(EXIT_FAILURE);
-		}
+		
+		/* prashantpandey: Commenting out fallocate call to preallocate space for
+		 * the file on disk because fallocate is not supported on MAC OS. Revisit
+		 * it later. */
+		/*int ret;*/
+		/*ret = fallocate(qf->mem->fd, 0, 0, size+sizeof(qfmetadata));*/
+		/*if (ret < 0) {*/
+			/*perror("Couldn't fallocate file:\n");*/
+			/*exit(EXIT_FAILURE);*/
+		/*}*/
 		qf->metadata = (qfmetadata *)mmap(NULL, size+sizeof(qfmetadata), PROT_READ |
 																			PROT_WRITE, MAP_SHARED, qf->mem->fd, 0);
 
