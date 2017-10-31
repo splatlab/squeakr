@@ -1671,7 +1671,7 @@ void qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits,
 		qf->metadata->noccupied_slots = 0;
 		qf->metadata->num_locks = (qf->metadata->xnslots/NUM_SLOTS_TO_LOCK)+2;
 
-		qf->blocks = (qfblock *)(qf->metadata + sizeof(qfmetadata));
+		qf->blocks = (qfblock *)(qf->metadata + 1);
 	}
 	
 	/* initialize all the locks to 0 */
@@ -1749,7 +1749,7 @@ void qf_read(QF *qf, const char *path)
 	qf->metadata = (qfmetadata *)mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
 																qf->mem->fd, 0);
 
-	qf->blocks = (qfblock *)(qf->metadata + sizeof(qfmetadata));
+	qf->blocks = (qfblock *)(qf->metadata + 1);
 }
 
 void qf_reset(QF *qf)
