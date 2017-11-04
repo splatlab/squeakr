@@ -16,12 +16,6 @@
 
 #include "gqf.h"
 
-/* Can be 
-	 0 (choose size at run-time), 
-	 8, 16, 32, or 64 (for optimized versions),
-	 or other integer <= 56 (for compile-time-optimized bit-shifting-based versions)
-	 */
-
 /******************************************************************
  * Code for managing the metadata bits and slots w/o interpreting *
  * the content of the slots.
