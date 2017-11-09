@@ -2,7 +2,6 @@
 Squeakr: An Exact and Approximate k -mer Counting System
 
 This work was published in Bioinformatics. If you use this software please cite us:
---------
 ```
 @article{doi:10.1093/bioinformatics/btx636,
 author = {Pandey, Prashant and Bender, Michael A and Johnson, Rob and Patro, Rob},
