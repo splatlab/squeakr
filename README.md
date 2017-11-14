@@ -1,6 +1,22 @@
 # squeakr
 Squeakr: An Exact and Approximate k -mer Counting System
 
+This work was published in Bioinformatics. If you use this software please cite us:
+```
+@article{doi:10.1093/bioinformatics/btx636,
+author = {Pandey, Prashant and Bender, Michael A and Johnson, Rob and Patro, Rob},
+title = {Squeakr: An Exact and Approximate k-mer Counting System},
+journal = {Bioinformatics},
+volume = {},
+number = {},
+pages = {btx636},
+year = {2017},
+doi = {10.1093/bioinformatics/btx636},
+URL = { + http://dx.doi.org/10.1093/bioinformatics/btx636},
+eprint = {/oup/backfile/content_public/journal/bioinformatics/pap/10.1093_bioinformatics_btx636/1/btx636.pdf}
+}
+```
+
 Overview
 --------
 
