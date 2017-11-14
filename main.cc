@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
 	string cluster_file = string(argv[4]) + cluster_ext;
 	string freq_file = string(argv[4]) + freq_ext;
 
-	uint32_t seed = time(NULL);
+	uint32_t seed = 2038074761;
 	//Initialize the main  QF
 	qf_init(&cf, (1ULL<<qbits), num_hash_bits, 0, true, "", seed);
 
