@@ -60,6 +60,7 @@ typedef struct {
 	QF *local_qf;
 	QF *main_qf;
 	uint32_t count {0};
+	uint32_t ksize {28};
 }flush_object;
 
 struct file_pointer {
@@ -249,14 +250,14 @@ void reads_to_kmers(chunk &c, flush_object *obj)
 		/*cout << read << endl;*/
 
 start_read:
-		if (read.length() < K) // start with the next read if length is smaller than K
+		if (read.length() < obj->ksize) // start with the next read if length is smaller than K
 			goto next_read;
 		{
 			uint64_t first = 0;
 			uint64_t first_rev = 0;
 			uint64_t item = 0;
 			//cout << "K " << read.substr(0,K) << endl;
-			for(int i=0; i<K; i++) { //First kmer
+			for(int i=0; i<obj->ksize; i++) { //First kmer
 				uint8_t curr = kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
 					read = read.substr(i+1, read.length());
@@ -266,7 +267,7 @@ start_read:
 				first = first << 2;
 			}
 			first = first >> 2;
-			first_rev = kmer::reverse_complement(first);
+			first_rev = kmer::reverse_complement(first, obj->ksize);
 
 			//cout << "kmer: "; cout << int_to_str(first);
 			//cout << " reverse-comp: "; cout << int_to_str(first_rev) << endl;
@@ -297,10 +298,10 @@ start_read:
 			}
 			//cout<< "X " << bitset<64>(first)<<endl;
 
-			uint64_t next = (first << 2) & BITMASK(2*K);
+			uint64_t next = (first << 2) & BITMASK(2*obj->ksize);
 			uint64_t next_rev = first_rev >> 2;
 
-			for(uint32_t i=K; i<read.length(); i++) { //next kmers
+			for(uint32_t i=obj->ksize; i<read.length(); i++) { //next kmers
 				//cout << "K: " << read.substr(i-K+1,K) << endl;
 				uint8_t curr = kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
@@ -309,7 +310,7 @@ start_read:
 				}
 				next |= curr;
 				uint64_t tmp = kmer::reverse_complement_base(curr);
-				tmp <<= (K*2-2);
+				tmp <<= (obj->ksize*2-2);
 				next_rev = next_rev | tmp;
 				if (kmer::compare_kmers(next, next_rev))
 					item = next;
@@ -341,7 +342,7 @@ start_read:
 				//cout<<bitset<64>(next)<<endl;
 				//assert(next == str_to_int(read.substr(i-K+1,K)));
 
-				next = (next << 2) & BITMASK(2*K);
+				next = (next << 2) & BITMASK(2*obj->ksize);
 				next_rev = next_rev >> 2;
 			}
 		}
@@ -441,8 +442,9 @@ int main(int argc, char *argv[])
 	}
 
 	int mode = atoi(argv[1]);
-	int qbits = atoi(argv[2]);
-	int numthreads = atoi(argv[3]);
+	int ksize = atoi(argv[2]);
+	int qbits = atoi(argv[3]);
+	int numthreads = atoi(argv[4]);
 	int num_hash_bits = qbits+8;	// we use 8 bits for remainders in the main QF
 	string ser_ext(".ser");
 	string log_ext(".log");
@@ -452,7 +454,7 @@ int main(int argc, char *argv[])
 	struct timezone tzp;
 	uint32_t OVERHEAD_SIZE = 65535;
 
-	for (int i = 4; i < argc; i++) {
+	for (int i = 5; i < argc; i++) {
 		auto* fr = new reader;
 		if (getFileReader(mode, argv[i], fr)) {
 			file_pointer* fp = new file_pointer;
@@ -483,6 +485,7 @@ int main(int argc, char *argv[])
 		flush_object* obj = (flush_object*)malloc(sizeof(flush_object));
 		obj->local_qf = &local_qfs[i];
 		obj->main_qf = &cf;
+		obj->ksize = ksize;
 		prod_threads.add_thread(new boost::thread(fastq_to_uint64kmers_prod,
 																							obj));
 	}

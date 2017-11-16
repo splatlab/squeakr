@@ -66,12 +66,12 @@ void print_time_elapsed(string desc, struct timeval* start, struct timeval* end)
 }
 
 // A=1, C=0, T=2, G=3
-void getRandomKmers(int n, uint64_t range, uint32_t seed, vector<uint64_t>& kmers)
+void getRandomKmers(int n, uint64_t range, uint32_t seed, vector<uint64_t>& kmers, uint32_t K)
 {
 	uint64_t kmer;
 	for (int j = 0; j < n; j++) {
 		kmer = 0;
-		for (int i = 0; i < K; i++) {
+		for (uint i = 0; i < K; i++) {
 			uint8_t c = rand()%4;
 			kmer = kmer | c;
 			kmer = kmer << 2;
@@ -105,8 +105,9 @@ int main ( int argc, char *argv[] )
 	}
 
 	string ds_file = argv[1];
-	uint32_t num_query = atoi(argv[2]);
-	int random = atoi(argv[3]);
+	int ksize = atoi(argv[2]);
+	uint32_t num_query = atoi(argv[3]);
+	int random = atoi(argv[4]);
 	struct timeval start, end;
 	struct timezone tzp;
 	vector<uint64_t> kmers;
@@ -118,7 +119,7 @@ int main ( int argc, char *argv[] )
 	qf_deserialize(&cf, ds_file.c_str());
 
 	if (random) {
-		getRandomKmers(num_query, cf.metadata->range, cf.metadata->seed, kmers);
+		getRandomKmers(num_query, cf.metadata->range, cf.metadata->seed, kmers, ksize);
 	} else {
 		uint64_t i = 0;
 		qf_iterator(&cf, &cfi, 0);

@@ -60,11 +60,12 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 
 ```bash
  $ make squeakr-count
- $ ./squeakr-count 0 20 1 test.fastq
+ $ ./squeakr-count 0 20 20 1 test.fastq
 ```
 
  Following are the arguments to squeakr-count:
  - file format: 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq
+ - k-mer size: the size of the k-mer
  - CQF size: the log of the number of slots in the CQF
  - num of threads: number of threads to count
  - file(s): "filename" or "dirname/*" for all the files in a directory
@@ -78,6 +79,7 @@ squeakr-count creates a files with the extension ".ser" which is the k-mer repre
 
  Following are the arguments to squeakr-query:
  - file: dataset Squeakr representation
+ - k-mer size: the size of the k-mer
  - num of queries: number of queries
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
