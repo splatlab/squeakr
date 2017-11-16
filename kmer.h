@@ -24,8 +24,6 @@
 #include <stdio.h>
 #include <string>
 
-#define K 28
-
 enum DNA_MAP {C, A, T, G};  // A=1, C=0, T=2, G=3
 
 using namespace std;
@@ -37,9 +35,9 @@ namespace kmercounting {
 			static inline char map_int(uint8_t base);
 			static inline uint8_t map_base(char base);
 			static uint64_t str_to_int(string str);
-			static string int_to_str(uint64_t kmer);
+			static string int_to_str(uint64_t kmer, uint32_t K);
 			static inline int reverse_complement_base(int x);
-			static uint64_t reverse_complement(uint64_t kmer);
+			static uint64_t reverse_complement(uint64_t kmer, uint32_t K);
 			static inline bool compare_kmers(uint64_t kmer, uint64_t kmer_rev);
 			static inline unsigned __int128 word_reverse_complement(unsigned __int128 w);
 			static inline int64_t word_reverse_complement(uint64_t w);
@@ -98,7 +96,7 @@ namespace kmercounting {
 	 * Converts a uint64_t to a string of "ACTG"
 	 * where each character is represented by using only two bits
 	 */
-	string int_to_str(uint64_t kmer)
+	string int_to_str(uint64_t kmer, uint32_t K)
 	{
 		uint8_t base;
 		string str;
@@ -114,7 +112,7 @@ namespace kmercounting {
 	inline int kmer::reverse_complement_base(int x) { return 3 - x; }
 
 	/* Calculate the revsese complement of a kmer */
-	uint64_t kmer::reverse_complement(uint64_t kmer)
+	uint64_t kmer::reverse_complement(uint64_t kmer, uint32_t K)
 	{
 		uint64_t rc = 0;
 		uint8_t base = 0;
