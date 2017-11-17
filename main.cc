@@ -468,10 +468,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	string ds_file = string(argv[4]) + ser_ext;
-	string log_file = string(argv[4]) + log_ext;
-	string cluster_file = string(argv[4]) + cluster_ext;
-	string freq_file = string(argv[4]) + freq_ext;
+	string ds_file = string(argv[5]) + ser_ext;
+	string log_file = string(argv[5]) + log_ext;
+	string cluster_file = string(argv[5]) + cluster_ext;
+	string freq_file = string(argv[5]) + freq_ext;
 
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
