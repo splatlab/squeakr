@@ -494,10 +494,8 @@ int main(int argc, char *argv[])
 	struct timezone tzp;
 	uint32_t OVERHEAD_SIZE = 65535;
 
-	//for (int i = 5; i < argc; i++) {
   for( auto& fn : filenames ) {
 		auto* fr = new reader;
-		//if (getFileReader(mode, argv[i], fr)) {
 		if (getFileReader(mode, fn.c_str(), fr)) {
 			file_pointer* fp = new file_pointer;
 			fp->mode = mode;
