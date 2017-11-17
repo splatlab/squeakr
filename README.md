@@ -60,7 +60,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 
 ```bash
  $ make squeakr-count
- $ ./squeakr-count 0 20 20 1 test.fastq
+ $ ./squeakr-count 0 20 20 1 ./ test.fastq
 ```
 
  Following are the arguments to squeakr-count:
@@ -68,6 +68,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
  - k-mer size: the size of the k-mer
  - CQF size: the log of the number of slots in the CQF
  - num of threads: number of threads to count
+ - prefix: path to the directory where the output should go
  - file(s): "filename" or "dirname/*" for all the files in a directory
 
 squeakr-count creates a files with the extension ".ser" which is the k-mer representation.

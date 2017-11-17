@@ -445,6 +445,7 @@ int main(int argc, char *argv[])
 	int ksize = atoi(argv[2]);
 	int qbits = atoi(argv[3]);
 	int numthreads = atoi(argv[4]);
+	string prefix(argv[5]);
 	int num_hash_bits = qbits+8;	// we use 8 bits for remainders in the main QF
 	string ser_ext(".ser");
 	string log_ext(".log");
@@ -454,7 +455,7 @@ int main(int argc, char *argv[])
 	struct timezone tzp;
 	uint32_t OVERHEAD_SIZE = 65535;
 
-	for (int i = 5; i < argc; i++) {
+	for (int i = 6; i < argc; i++) {
 		auto* fr = new reader;
 		if (getFileReader(mode, argv[i], fr)) {
 			file_pointer* fp = new file_pointer;
@@ -468,10 +469,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	string ds_file = string(argv[5]) + ser_ext;
-	string log_file = string(argv[5]) + log_ext;
-	string cluster_file = string(argv[5]) + cluster_ext;
-	string freq_file = string(argv[5]) + freq_ext;
+	string filepath(argv[6]);
+	char *last_slash = strrchr(argv[6], '/');
+	int len = -1;
+	if (last_slash)
+		len = last_slash - argv[6];
+	string filename = filepath.substr(len + 1);
+	string ds_file = prefix + filename + ser_ext;
+	string log_file = prefix + filename + log_ext;
+	string cluster_file = prefix + filename + cluster_ext;
+	string freq_file = prefix + filename + freq_ext;
 
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
