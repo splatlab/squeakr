@@ -437,6 +437,7 @@ int main(int argc, char *argv[])
   int ksize;
   int qbits;
   int numthreads;
+  std::string prefix = "./";
   std::vector<std::string> filenames;
   using namespace clipp;
   auto cli = (
@@ -447,9 +448,11 @@ int main(int argc, char *argv[])
               required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to count",
               required("-s","--log-slots") & value("log-slots", qbits) % "log of number of slots in the CQF",
               required("-t","--threads") & value("num-threads", numthreads) % "number of threads to use to count",
+              option("-o","--output-dir") & value("out-dir", prefix) % "directory where output should be written (default = \"./\")",
               values("files", filenames) % "list of files to be counted",
               option("-h", "--help")      % "show help"
               );
+
   auto res = parse(argc, argv, cli);
 
   if (!res) {
@@ -507,10 +510,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	string ds_file = filenames.front() + ser_ext;
-	string log_file = filenames.front() + log_ext;
-	string cluster_file = filenames.front() + cluster_ext;
-	string freq_file = filenames.front() + freq_ext;
+  string filepath(filenames.front());
+  auto const pos = filepath.find_last_of('/');
+  string filename = filepath.substr(pos+1);
+  if (prefix.back() != '/') {
+    prefix += '/';
+  }
+	string ds_file =      prefix + filename + ser_ext;
+	string log_file =     prefix + filename + log_ext;
+	string cluster_file = prefix + filename + cluster_ext;
+	string freq_file =    prefix + filename + freq_ext;
 
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
