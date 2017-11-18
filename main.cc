@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
   enum class file_type {fastq, gzip, bzip2};
 
   file_type in_type = file_type::fastq;
-  int mode;
+  int mode = 0;
   int ksize;
   int qbits;
   int numthreads;
