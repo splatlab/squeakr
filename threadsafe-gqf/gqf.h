@@ -9,6 +9,11 @@
 extern "C" {
 #endif
 
+/* Can be 
+	0 (choose size at run-time), 
+	8, 16, 32, or 64 (for optimized versions),
+	or other integer <= 56 (for compile-time-optimized bit-shifting-based versions)
+	*/
 #define BITS_PER_SLOT 0
 
 	struct __attribute__ ((__packed__)) qfblock;

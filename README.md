@@ -1,6 +1,22 @@
 # squeakr
 Squeakr: An Exact and Approximate k -mer Counting System
 
+This work was published in Bioinformatics. If you use this software please cite us:
+```
+@article{doi:10.1093/bioinformatics/btx636,
+author = {Pandey, Prashant and Bender, Michael A and Johnson, Rob and Patro, Rob},
+title = {Squeakr: An Exact and Approximate k-mer Counting System},
+journal = {Bioinformatics},
+volume = {},
+number = {},
+pages = {btx636},
+year = {2017},
+doi = {10.1093/bioinformatics/btx636},
+URL = { + http://dx.doi.org/10.1093/bioinformatics/btx636},
+eprint = {/oup/backfile/content_public/journal/bioinformatics/pap/10.1093_bioinformatics_btx636/1/btx636.pdf}
+}
+```
+
 Overview
 --------
 
@@ -44,11 +60,12 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 
 ```bash
  $ make squeakr-count
- $ ./squeakr-count 0 20 1 test.fastq
+ $ ./squeakr-count 0 20 20 1 test.fastq
 ```
 
  Following are the arguments to squeakr-count:
  - file format: 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq
+ - k-mer size: the size of the k-mer
  - CQF size: the log of the number of slots in the CQF
  - num of threads: number of threads to count
  - file(s): "filename" or "dirname/*" for all the files in a directory
@@ -62,17 +79,18 @@ squeakr-count creates a files with the extension ".ser" which is the k-mer repre
 
  Following are the arguments to squeakr-query:
  - file: dataset Squeakr representation
+ - k-mer size: the size of the k-mer
  - num of queries: number of queries
  - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
 ```bash
  $ make squeakr-inner-prod
- $ ./squeakr-inner-prod file1 file2
+ $ ./squeakr-inner-prod test.fastq.ser test.fastq.ser
 ```
  
  Following are the arguments to squeakr-inner-prod:
- - file1: dataset 1 Squeakr representation
- - file2: dataset 2 Squeakr representation
+ - test.fastq.ser: dataset 1 Squeakr representation
+ - test.fastq.ser: dataset 2 Squeakr representation
 
 Contributing
 ------------

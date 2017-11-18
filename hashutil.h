@@ -25,7 +25,6 @@
 #include <string>
 #include <stdlib.h>
 #include <stdint.h>
-#include <openssl/evp.h>
 
 namespace kmercounting {
 	class HashUtil {

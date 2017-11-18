@@ -16,12 +16,6 @@
 
 #include "gqf.h"
 
-/* Can be 
-	 0 (choose size at run-time), 
-	 8, 16, 32, or 64 (for optimized versions),
-	 or other integer <= 56 (for compile-time-optimized bit-shifting-based versions)
-	 */
-
 /******************************************************************
  * Code for managing the metadata bits and slots w/o interpreting *
  * the content of the slots.
@@ -1634,18 +1628,22 @@ void qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits,
 		qf->blocks = (qfblock *)calloc(size, 1);
 
 	} else {
-		int ret;
 
 		qf->mem->fd = open(path, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
 		if (qf->mem->fd < 0) {
 			perror("Couldn't open file:\n");
 			exit(EXIT_FAILURE);
 		}
-		ret = fallocate(qf->mem->fd, 0, 0, size+sizeof(qfmetadata));
-		if (ret < 0) {
-			perror("Couldn't fallocate file:\n");
-			exit(EXIT_FAILURE);
-		}
+		
+		/* prashantpandey: Commenting out fallocate call to preallocate space for
+		 * the file on disk because fallocate is not supported on MAC OS. Revisit
+		 * it later. */
+		/*int ret;*/
+		/*ret = fallocate(qf->mem->fd, 0, 0, size+sizeof(qfmetadata));*/
+		/*if (ret < 0) {*/
+			/*perror("Couldn't fallocate file:\n");*/
+			/*exit(EXIT_FAILURE);*/
+		/*}*/
 		qf->metadata = (qfmetadata *)mmap(NULL, size+sizeof(qfmetadata), PROT_READ |
 																			PROT_WRITE, MAP_SHARED, qf->mem->fd, 0);
 
@@ -1667,7 +1665,7 @@ void qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits,
 		qf->metadata->noccupied_slots = 0;
 		qf->metadata->num_locks = (qf->metadata->xnslots/NUM_SLOTS_TO_LOCK)+2;
 
-		qf->blocks = (qfblock *)(qf->metadata + sizeof(qfmetadata));
+		qf->blocks = (qfblock *)(qf->metadata + 1);
 	}
 	
 	/* initialize all the locks to 0 */
@@ -1745,7 +1743,7 @@ void qf_read(QF *qf, const char *path)
 	qf->metadata = (qfmetadata *)mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
 																qf->mem->fd, 0);
 
-	qf->blocks = (qfblock *)(qf->metadata + sizeof(qfmetadata));
+	qf->blocks = (qfblock *)(qf->metadata + 1);
 }
 
 void qf_reset(QF *qf)
