@@ -42,6 +42,7 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 
+#include "clipp.h"
 #include "threadsafe-gqf/gqf.h"
 #include "hashutil.h"
 #include "chunk.h"
@@ -395,7 +396,7 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 	return true;
 }
 
-bool getFileReader(int mode, char* fastq_file, reader* file_reader) 
+bool getFileReader(int mode, const char* fastq_file, reader* file_reader) 
 {
 	uint64_t gzip_buffer_size = 1ULL << 26;
 	uint64_t bzip2_buffer_size = 1ULL << 26;
@@ -429,22 +430,61 @@ int main(int argc, char *argv[])
 	QFi cfi;
 	QF local_qfs[50];
 
-	if (argc == 2) {
+  enum class file_type {fastq, gzip, bzip2};
+
+  file_type in_type = file_type::fastq;
+  int mode = 0;
+  int ksize;
+  int qbits;
+  int numthreads;
+  std::string prefix = "./";
+  std::vector<std::string> filenames;
+  using namespace clipp;
+  auto cli = (
+              one_of(
+                      required("-f").set(in_type, file_type::fastq) % "plain fastq",
+                      required("-g").set(in_type, file_type::gzip) % "gzip compressed fastq",
+                      required("-b").set(in_type, file_type::bzip2) % "bzip2 compressed fastq") % "format of the input",
+              required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to count",
+              required("-s","--log-slots") & value("log-slots", qbits) % "log of number of slots in the CQF",
+              required("-t","--threads") & value("num-threads", numthreads) % "number of threads to use to count",
+              option("-o","--output-dir") & value("out-dir", prefix) % "directory where output should be written (default = \"./\")",
+              values("files", filenames) % "list of files to be counted",
+              option("-h", "--help")      % "show help"
+              );
+
+  auto res = parse(argc, argv, cli);
+
+  if (!res) {
+    std::cout << make_man_page(cli, argv[0]) << "\n";
+    return 1;
+  }
+
+  switch (in_type) {
+  case file_type::fastq: mode = 0; break;
+  case file_type::gzip: mode = 1; break;
+  case file_type::bzip2: mode = 2; break;
+  }
+  /*
+  if (argc == 2) {
 		string arg_help(argv[1]);
 		if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
 			cout << "./squeakr-count [OPTIONS]" << endl
 				   << "file format   : 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq" << endl
 					 << "CQF size      : the log of the number of slots in the CQF" << endl
 					 << "num of threads: number of threads to count" << endl
-					 << "file(s)       : \"filename\" or \"dirname/*\" for all the files in a directory" << endl;
+					 << "file(s)       : \"filename\" or \"dirname/\" for all the files in a directory" << endl;
 			exit(0);
 		}
 	}
+  */
 
+  /*
 	int mode = atoi(argv[1]);
 	int ksize = atoi(argv[2]);
 	int qbits = atoi(argv[3]);
 	int numthreads = atoi(argv[4]);
+  */
 	int num_hash_bits = qbits+8;	// we use 8 bits for remainders in the main QF
 	string ser_ext(".ser");
 	string log_ext(".log");
@@ -454,9 +494,9 @@ int main(int argc, char *argv[])
 	struct timezone tzp;
 	uint32_t OVERHEAD_SIZE = 65535;
 
-	for (int i = 5; i < argc; i++) {
+  for( auto& fn : filenames ) {
 		auto* fr = new reader;
-		if (getFileReader(mode, argv[i], fr)) {
+		if (getFileReader(mode, fn.c_str(), fr)) {
 			file_pointer* fp = new file_pointer;
 			fp->mode = mode;
 			fp->freader.reset(fr);
@@ -468,10 +508,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	string ds_file = string(argv[4]) + ser_ext;
-	string log_file = string(argv[4]) + log_ext;
-	string cluster_file = string(argv[4]) + cluster_ext;
-	string freq_file = string(argv[4]) + freq_ext;
+  string filepath(filenames.front());
+  auto const pos = filepath.find_last_of('/');
+  string filename = filepath.substr(pos+1);
+  if (prefix.back() != '/') {
+    prefix += '/';
+  }
+	string ds_file =      prefix + filename + ser_ext;
+	string log_file =     prefix + filename + log_ext;
+	string cluster_file = prefix + filename + cluster_ext;
+	string freq_file =    prefix + filename + freq_ext;
 
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
