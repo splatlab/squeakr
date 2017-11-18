@@ -60,7 +60,30 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 
 ```bash
  $ make squeakr-count
- $ ./squeakr-count 0 20 20 1 ./ test.fastq
+ $ ./squeakr-count
+```
+
+The usage of `squeakr-count` is as follows:
+
+```bash
+SYNOPSIS
+        ./squeakr-count (-f|-g|-b) -k <k-size> -s <log-slots> -t <num-threads> [-o <out-dir>] <files>... [-h]
+
+OPTIONS
+        format of the input
+            -f      plain fastq
+            -g      gzip compressed fastq
+            -b      bzip2 compressed fastq
+
+        <k-size>    length of k-mers to count
+        <log-slots> log of number of slots in the CQF
+
+        <num-threads>
+                    number of threads to use to count
+
+        <out-dir>   directory where output should be written (default = "./")
+        <files>...  list of files to be counted
+        -h, --help  show help
 ```
 
  Following are the arguments to squeakr-count:
