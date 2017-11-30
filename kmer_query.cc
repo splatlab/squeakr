@@ -38,6 +38,7 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 
+#include "clipp.h"
 #include "threadsafe-gqf/gqf.h"
 #include "hashutil.h"
 #include "chunk.h"
@@ -93,24 +94,40 @@ int main ( int argc, char *argv[] )
 	QF cf;
 	QFi cfi;
 
-	if (argc == 2) {
-		string arg_help(argv[1]);
-		if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
-			cout << "./squeakr-query [OPTIONS]" << endl
-				   << "file          : dataset Squeakr representation" << endl
-					 << "num of queries: number of queries" << endl
-					 << "random        : 0 - query for existing k-mers, 1 - query for random k-mers" << endl;
-			exit(0);
-		}
-	}
+	//if (argc == 2) {
+		//string arg_help(argv[1]);
+		//if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
+			//cout << "./squeakr-query [OPTIONS]" << endl
+				//<< "file          : dataset Squeakr representation" << endl
+				//<< "num of queries: number of queries" << endl
+				//<< "random        : 0 - query for existing k-mers, 1 - query for random k-mers" << endl;
+			//exit(0);
+		//}
+	//}
 
-	string ds_file = argv[1];
-	int ksize = atoi(argv[2]);
-	uint32_t num_query = atoi(argv[3]);
-	int random = atoi(argv[4]);
+	string ds_file;
+	int ksize;
+	uint32_t num_query;
+	int random;
 	struct timeval start, end;
 	struct timezone tzp;
 	vector<uint64_t> kmers;
+
+	using namespace clipp;
+	auto cli = (
+							required("-f", "--cqf-file") & value("cqf-file", ds_file) % "input CQF file",
+							required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to query. Must be same the as the size of counted k-mers",
+							required("-n","--num-query") & value("num-query", num_query) % "number of queries",
+							required("-r","--random") & value("random-queries", random) % "random queries",
+							option("-h", "--help")  % "show help"
+						 );
+
+	auto res = parse(argc, argv, cli);
+
+	if (!res) {
+		std::cout << make_man_page(cli, argv[0]) << "\n";
+		return 1;
+	}
 
 	srand(time(NULL));
 
@@ -147,7 +164,7 @@ int main ( int argc, char *argv[] )
 	}
 	gettimeofday(&end, &tzp);
 	print_time_elapsed("", &start, &end);
-	
+
 	cout << "Not find: " << num_not_found << endl;
 
 	return EXIT_SUCCESS;
