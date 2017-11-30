@@ -279,8 +279,9 @@ start_read:
 				item = first_rev;
 
 			// hash the kmer using murmurhash/xxHash before adding to the list
-			item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																		 obj->local_qf->metadata->seed);
+			item = HashUtil::hash_64(item, BITMASK(2*obj->ksize));
+			//item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
+																		 //obj->local_qf->metadata->seed);
 			/*
 			 * first try and insert in the main QF.
 			 * If lock can't be accuired in the first attempt then
@@ -319,8 +320,9 @@ start_read:
 					item = next_rev;
 
 			// hash the kmer using murmurhash/xxHash before adding to the list
-				item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																			 obj->local_qf->metadata->seed);
+				item = HashUtil::hash_64(item, BITMASK(2*obj->ksize));
+				//item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
+																			 //obj->local_qf->metadata->seed);
 				//item = XXH63 (((void*)&item), sizeof(item), seed);
 
 				/*
@@ -460,6 +462,11 @@ int main(int argc, char *argv[])
     return 1;
   }
 
+	if (ksize > 32) {
+		cerr << "k-mer size greater than 32 is not supported." << endl;
+		return 1;
+	}
+
   switch (in_type) {
   case file_type::fastq: mode = 0; break;
   case file_type::gzip: mode = 1; break;
@@ -485,8 +492,8 @@ int main(int argc, char *argv[])
 	int qbits = atoi(argv[3]);
 	int numthreads = atoi(argv[4]);
   */
-	int num_hash_bits = qbits+8;	// we use 8 bits for remainders in the main QF
-	string ser_ext(".ser");
+	int num_hash_bits = 2*ksize; // Each base 2 bits.
+	string ser_ext("_exact.ser");
 	string log_ext(".log");
 	string cluster_ext(".cluster");
 	string freq_ext(".freq");
