@@ -60,7 +60,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 
 ```bash
  $ make squeakr-count
- $ ./squeakr-count
+ $ ./squeakr-count -f -k 28 -s 20 -t 1 -o ./ test.fastq
 ```
 
 The usage of `squeakr-count` is as follows:
@@ -98,7 +98,23 @@ squeakr-count creates a files with the extension ".ser" which is the k-mer repre
 
 ```bash
  $ make squeakr-query
- $ ./squeakr-query test.fastq.ser 10000 0
+ $ ./squeakr-query -f test.fastq.ser -k 28 -n 1000 -r 0
+```
+The usage of `squeakr-query` is as follows:
+
+```bash
+SYNOPSIS
+        ./squeakr-query -f <cqf-file> -k <k-size> -n <num-query> -r <random-queries> [-h]
+
+OPTIONS
+        <cqf-file>  input CQF file
+        <k-size>    length of k-mers to query. Must be same the as the size of counted k-mers
+        <num-query> number of queries
+
+        <random-queries>
+                    random queries
+
+        -h, --help  show help
 ```
 
  Following are the arguments to squeakr-query:
@@ -109,7 +125,22 @@ squeakr-count creates a files with the extension ".ser" which is the k-mer repre
 
 ```bash
  $ make squeakr-inner-prod
- $ ./squeakr-inner-prod test.fastq.ser test.fastq.ser
+ $ ./squeakr-inner-prod -a test.fastq.ser -b test.fastq.ser
+```
+ The usage of `squeakr-inner-product` is as follows:
+
+```bash
+SYNOPSIS
+        ./squeakr-inner-prod -a <cqf-file-first> -b <cqf-file-second> [-h]
+
+OPTIONS
+        <cqf-file-first>
+                    first input CQF file
+
+        <cqf-file-second>
+                    second input CQF file
+
+        -h, --help  show help
 ```
  
  Following are the arguments to squeakr-inner-prod:
