@@ -81,7 +81,7 @@ int main ( int argc, char *argv[] )
 	using namespace clipp;
 	auto cli = (
 							required("-a", "--cqf-file-first") & value("cqf-file-first", ds_filea) % "first input CQF file",
-							required("-b", "--cqf-file-second") & value("cqf-file-second", ds_filea) % "second input CQF file",
+							required("-b", "--cqf-file-second") & value("cqf-file-second", ds_fileb) % "second input CQF file",
 							option("-h", "--help")  % "show help"
 						 );
 
