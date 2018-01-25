@@ -96,6 +96,8 @@ OPTIONS
 
 squeakr-count creates a files with the extension ".ser" which is the k-mer representation.
 
+`lognumslots.sh` script can be used to estimate the `log of number of slots in the CQF` argument. The script takes as input the path to the output file of 'ntCard' (https://github.com/bcgsc/ntCard). It then calculates log of the number of slots needed by Squeakr to count k-mers.
+
 ```bash
  $ make squeakr-query
  $ ./squeakr-query -f test.fastq.ser -k 28 -n 1000 -r 0
