@@ -1770,7 +1770,8 @@ void qf_serialize(const QF *qf, const char *filename)
 	FILE *fout;
 	fout = fopen(filename, "wb+");
 	if (fout == NULL) {
-		perror("Error opening file for serializing\n");
+		fputs("Error opening file for serializing: ", stderr);
+		perror(filename);
 		exit(EXIT_FAILURE);
 	}
 
