@@ -57,7 +57,6 @@ namespace kmercounting {
 	{
 		return _size;
 	}
-
 }
 
 #endif

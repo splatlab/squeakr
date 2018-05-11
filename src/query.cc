@@ -39,7 +39,7 @@
 #include <sys/mman.h>
 
 #include "clipp.h"
-#include "threadsafe-gqf/gqf.h"
+#include "cqf.h"
 #include "hashutil.h"
 #include "chunk.h"
 #include "kmer.h"
@@ -48,9 +48,6 @@
 #include <bzlib.h>
 
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) - 1ULL)
-
-using namespace std;
-using namespace kmercounting;
 
 /* Print elapsed time using the start and end timeval */
 void print_time_elapsed(string desc, struct timeval* start, struct timeval* end) 
@@ -63,7 +60,7 @@ void print_time_elapsed(string desc, struct timeval* start, struct timeval* end)
 	elapsed.tv_usec = end->tv_usec - start->tv_usec;
 	elapsed.tv_sec = end->tv_sec - start->tv_sec;
 	float time_elapsed = (elapsed.tv_sec * 1000000 + elapsed.tv_usec)/1000000.f;
-	cout << desc << "Total Time Elapsed: " << to_string(time_elapsed) << " seconds" << endl;
+	std::cout << desc << "Total Time Elapsed: " << to_string(time_elapsed) << " seconds" << std::endl;
 }
 
 // A=1, C=0, T=2, G=3
@@ -94,17 +91,6 @@ int main ( int argc, char *argv[] )
 	QF cf;
 	QFi cfi;
 
-	//if (argc == 2) {
-		//string arg_help(argv[1]);
-		//if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
-			//cout << "./squeakr-query [OPTIONS]" << endl
-				//<< "file          : dataset Squeakr representation" << endl
-				//<< "num of queries: number of queries" << endl
-				//<< "random        : 0 - query for existing k-mers, 1 - query for random k-mers" << endl;
-			//exit(0);
-		//}
-	//}
-
 	string ds_file;
 	int ksize;
 	uint32_t num_query;
@@ -132,7 +118,7 @@ int main ( int argc, char *argv[] )
 	srand(time(NULL));
 
 	//Initialize the QF
-	cout << "Reading kmers into the QF off the disk" << endl;
+	std::cout << "Reading kmers into the QF off the disk" << std::endl;
 	qf_deserialize(&cf, ds_file.c_str());
 
 	if (random) {
@@ -145,27 +131,27 @@ int main ( int argc, char *argv[] )
 			qfi_get(&cfi, &key, &value, &count);
 			i++;
 			kmers.push_back(key);
-			//freq_file << key << " " << count << endl;
+			//freq_file << key << " " << count << std::endl;
 		} while (!qfi_next(&cfi));
-		cout << "Total kmers: " << i << endl;
+		std::cout << "Total kmers: " << i << std::endl;
 	}
 
-	cout << "Querying kmers in the QF" << endl;
+	std::cout << "Querying kmers in the QF" << std::endl;
 	random_shuffle ( kmers.begin(), kmers.end() );
 	uint64_t num_not_found = 0;
 	gettimeofday(&start, &tzp);
 	for (uint32_t i = 0; i < num_query || i < kmers.size(); i++) {
-		/*cout << "index: " << id << endl;*/
+		/*std::cout << "index: " << id << std::endl;*/
 		if (!qf_count_key_value(&cf, kmers[i],0)) {
 			num_not_found++;
-			//cout << "Can not find the kmer: " << kmers[id] << endl;
+			//std::cout << "Can not find the kmer: " << kmers[id] << std::endl;
 			//abort();
 		}
 	}
 	gettimeofday(&end, &tzp);
 	print_time_elapsed("", &start, &end);
 
-	cout << "Not find: " << num_not_found << endl;
+	std::cout << "Not find: " << num_not_found << std::endl;
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

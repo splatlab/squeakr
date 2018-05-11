@@ -34,9 +34,7 @@
 #include <sys/time.h>
 
 #include "clipp.h"
-#include "threadsafe-gqf/gqf.h"
-
-using namespace std;
+#include "cqf.h"
 
 /* Print elapsed time using the start and end timeval */
 void print_time_elapsed(string desc, struct timeval* start, struct timeval* end) 
@@ -49,7 +47,7 @@ void print_time_elapsed(string desc, struct timeval* start, struct timeval* end)
 	elapsed.tv_usec = end->tv_usec - start->tv_usec;
 	elapsed.tv_sec = end->tv_sec - start->tv_sec;
 	float time_elapsed = (elapsed.tv_sec * 1000000 + elapsed.tv_usec)/1000000.f;
-	cout << desc << "Total Time Elapsed: " << to_string(time_elapsed) << " seconds" << endl;
+	cout << desc << "Total Time Elapsed: " << to_string(time_elapsed) << " seconds" << std::endl;
 }
 
 /*
@@ -65,9 +63,9 @@ int main ( int argc, char *argv[] )
 	//if (argc == 2) {
 		//string arg_help(argv[1]);
 		//if (arg_help.compare("-h") != 0 || arg_help.compare("-help") != 0) {
-			//cout << "./squeakr-inner-product [OPTIONS]" << endl
-					 //<< "file1: dataset 1 Squeakr representation" << endl
-					 //<< "file2: dataset 2 Squeakr representation" << endl;
+			//cout << "./squeakr-inner-product [OPTIONS]" << std::endl
+					 //<< "file1: dataset 1 Squeakr representation" << std::endl
+					 //<< "file2: dataset 2 Squeakr representation" << std::endl;
 			//exit(0);
 		//}
 	//}
@@ -96,7 +94,7 @@ int main ( int argc, char *argv[] )
 	srand(time(NULL));
 
 	//Initialize the QF
-	cout << "Mmap the QF from disk" << endl;
+	cout << "Mmap the QF from disk" << std::endl;
 	qf_read(&cfa, ds_filea.c_str());
 	qf_read(&cfb, ds_fileb.c_str());
 
@@ -105,12 +103,12 @@ int main ( int argc, char *argv[] )
 		return 1;
 	}
 
-	cout << "Performing inner product querries." << endl;
+	cout << "Performing inner product querries." << std::endl;
 
 	gettimeofday(&start, &tzp);
 	inner_prod = qf_inner_product(&cfa, &cfb);
 	gettimeofday(&end, &tzp);
-	cout << "Inner product: " << inner_prod << "\n" << endl;
+	cout << "Inner product: " << inner_prod << "\n" << std::endl;
 	print_time_elapsed("", &start, &end);
 	
 	return EXIT_SUCCESS;

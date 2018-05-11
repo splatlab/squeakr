@@ -26,8 +26,6 @@
 #ifndef _READER_H_
 #define _READER_H_
 
-using namespace std;
-
 namespace kmercounting {
 	class reader {
 		public:

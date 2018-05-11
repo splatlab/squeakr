@@ -1,4 +1,4 @@
-TARGETS= squeakr-count squeakr-query squeakr-inner-prod
+TARGETS= squeakr
 
 ifdef D
 	DEBUG=-g
@@ -19,12 +19,22 @@ ifdef P
 endif
 
 CXX = g++ -std=c++11
-CC = g++ -std=c++11
+CC = gcc -std=gnu11
 LD= g++ -std=c++11
 
-CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare
+LOC_INCLUDE=include
+LOC_SRC=src
+OBJDIR=obj
 
-LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system -lboost_thread -lm -lbz2 -lz
+CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE) \
+-Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare
+
+CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)\
+-Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare \
+-Wno-implicit-function-declaration
+
+LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
+-lboost_thread -lm -lz -lrt
 
 #
 # declaration of dependencies
@@ -33,22 +43,20 @@ LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system -lboost_thread -l
 all: $(TARGETS)
 
 # dependencies between programs and .o files
-
-squeakr-count:                  main.o 								 hashutil.o threadsafe-gqf/gqf.o
-squeakr-query: 					 kmer_query.o 					 hashutil.o threadsafe-gqf/gqf.o
-squeakr-inner-prod: 			 kmer_inner_prod.o 			 hashutil.o threadsafe-gqf/gqf.o
+squeakr:					$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o $(OBJDIR)/list.o $(OBJDIR)/hashutil.o $(OBJDIR)/kmer.o $(OBJDIR)/util.o
 
 # dependencies between .o files and .h files
 
-main.o: 								 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h reader.h
-kmer_query.o: 					 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h
-kmer_inner_prod.o: 			 									threadsafe-gqf/gqf.h hashutil.h
-hashutil.o: 																									 hashutil.h
+$(OBJDIR)/count.o: 			$(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h $(LOCAL_INCLUDE)/chunk.h $(LOCAL_INCLUDE)/kmer.h $(LOCAL_INCLUDE)/reader.h
+$(OBJDIR)/query.o: 			$(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h $(LOCAL_INCLUDE)/chunk.h $(LOCAL_INCLUDE)/kmer.h
+$(OBJDIR)/innerprod.o: $(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h
+$(OBJDIR)/list.o: 		 $(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h
+$(OBJDIR)/hashutil.o: 	$(LOCAL_INCLUDE)/hashutil.h
+$(OBJDIR)/kmer.o: 			$(LOC_SRC)/kmer.cc $(LOC_INCLUDE)/kmer.h
+$(OBJDIR)/util.o: 			$(LOC_SRC)/utill.cc $(LOC_INCLUDE)/util.h
 
 # dependencies between .o files and .cc (or .c) files
-
-%.o: %.cc
-threadsafe-gqf/gqf.o: threadsafe-gqf/gqf.c threadsafe-gqf/gqf.h
+$(OBJDIR)/gqf.o: $(LOC_SRC)/cqf/gqf.c $(LOC_INCLUDE)/cqf/gqf.h
 
 #
 # generic build rules
@@ -57,12 +65,18 @@ threadsafe-gqf/gqf.o: threadsafe-gqf/gqf.c threadsafe-gqf/gqf.h
 $(TARGETS):
 	$(LD) $^ $(LDFLAGS) -o $@
 
-%.o: %.cc
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -c -o $@
+$(OBJDIR)/%.o: $(LOC_SRC)/%.cc | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c -o $@ $<
 
-%.o: %.c
-	$(CC) $(CXXFLAGS) $(INCLUDE) $< -c -o $@
+$(OBJDIR)/%.o: $(LOC_SRC)/%.c | $(OBJDIR)
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
+
+$(OBJDIR)/%.o: $(LOC_SRC)/cqf/%.c | $(OBJDIR)
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
+
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
 
 clean:
-	rm -f *.o threadsafe-gqf/gqf.o $(TARGETS)
+	rm -f $(OBJDIR)/*.o core $(TARGETS)
 
