@@ -26,21 +26,19 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-namespace kmercounting {
-	class HashUtil {
-		public:
-			static uint64_t MurmurHash64B(const void * key, int len, unsigned int
-																		seed);
-			static uint64_t MurmurHash64A(const void * key, int len, unsigned int
-																		seed);
+class HashUtil {
+	public:
+		static uint64_t MurmurHash64B(const void * key, int len, unsigned int
+																	seed);
+		static uint64_t MurmurHash64A(const void * key, int len, unsigned int
+																	seed);
 
-			static uint64_t hash_64(uint64_t key, uint64_t mask);
-			static uint64_t hash_64i(uint64_t key, uint64_t mask);
+		static uint64_t hash_64(uint64_t key, uint64_t mask);
+		static uint64_t hash_64i(uint64_t key, uint64_t mask);
 
-		private:
-			HashUtil();
-	};
-}	// namespace kmercounting
+	private:
+		HashUtil();
+};
 
 #endif  // #ifndef _HASHUTIL_H_
 

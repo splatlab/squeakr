@@ -23,40 +23,38 @@
 
 #include <stdio.h>
 
-namespace kmercounting {
-	class chunk {
-		public:
-			chunk();
-			chunk(char *reads, uint32_t size);
-			inline char *get_reads();
-			inline uint32_t get_size();
+class chunk {
+	public:
+		chunk();
+		chunk(char *reads, uint32_t size);
+		inline char *get_reads();
+		inline uint32_t get_size();
 
-		private:
-			char *_reads;
-			uint32_t _size;
-	};
+	private:
+		char *_reads;
+		uint32_t _size;
+};
 
-	chunk::chunk()
-	{
-		_reads = NULL;
-		_size = 0;
-	}
+chunk::chunk()
+{
+	_reads = NULL;
+	_size = 0;
+}
 
-	chunk::chunk(char *reads, uint32_t size)
-	{
-		_reads = reads;
-		_size = size;
-	}
+chunk::chunk(char *reads, uint32_t size)
+{
+	_reads = reads;
+	_size = size;
+}
 
-	inline char *chunk::get_reads()
-	{
-		return _reads;
-	}
+inline char *chunk::get_reads()
+{
+	return _reads;
+}
 
-	inline uint32_t chunk::get_size()
-	{
-		return _size;
-	}
+inline uint32_t chunk::get_size()
+{
+	return _size;
 }
 
 #endif

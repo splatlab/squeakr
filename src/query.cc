@@ -39,7 +39,7 @@
 #include <sys/mman.h>
 
 #include "clipp.h"
-#include "cqf.h"
+#include "gqf_cpp.h"
 #include "hashutil.h"
 #include "chunk.h"
 #include "kmer.h"
@@ -49,22 +49,8 @@
 
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) - 1ULL)
 
-/* Print elapsed time using the start and end timeval */
-void print_time_elapsed(string desc, struct timeval* start, struct timeval* end) 
-{
-	struct timeval elapsed;
-	if (start->tv_usec > end->tv_usec) {
-		end->tv_usec += 1000000;
-		end->tv_sec--;
-	}
-	elapsed.tv_usec = end->tv_usec - start->tv_usec;
-	elapsed.tv_sec = end->tv_sec - start->tv_sec;
-	float time_elapsed = (elapsed.tv_sec * 1000000 + elapsed.tv_usec)/1000000.f;
-	std::cout << desc << "Total Time Elapsed: " << to_string(time_elapsed) << " seconds" << std::endl;
-}
-
 // A=1, C=0, T=2, G=3
-void getRandomKmers(int n, uint64_t range, uint32_t seed, vector<uint64_t>& kmers, uint32_t K)
+void getRandomKmers(int n, uint64_t range, uint32_t seed, std::vector<uint64_t>& kmers, uint32_t K)
 {
 	uint64_t kmer;
 	for (int j = 0; j < n; j++) {
@@ -86,18 +72,16 @@ void getRandomKmers(int n, uint64_t range, uint32_t seed, vector<uint64_t>& kmer
  *  Description:  
  * =====================================================================================
  */
-int main ( int argc, char *argv[] )
+int query_main(int argc, char *argv[])
 {
-	QF cf;
-	QFi cfi;
 
-	string ds_file;
+	std::string ds_file;
 	int ksize;
 	uint32_t num_query;
 	int random;
 	struct timeval start, end;
 	struct timezone tzp;
-	vector<uint64_t> kmers;
+	std::vector<uint64_t> kmers;
 
 	using namespace clipp;
 	auto cli = (
@@ -119,21 +103,18 @@ int main ( int argc, char *argv[] )
 
 	//Initialize the QF
 	std::cout << "Reading kmers into the QF off the disk" << std::endl;
-	qf_deserialize(&cf, ds_file.c_str());
+	CQF<KeyObject> cqf(ds_file, LOCKS_FORBIDDEN, FREAD);
 
 	if (random) {
-		getRandomKmers(num_query, cf.metadata->range, cf.metadata->seed, kmers, ksize);
+		getRandomKmers(num_query, cqf.range(), cqf.seed(), kmers, ksize);
 	} else {
-		uint64_t i = 0;
-		qf_iterator(&cf, &cfi, 0);
+		CQF<KeyObject>::Iterator it = cqf.begin();
 		do {
-			uint64_t key = 0, value = 0, count = 0;
-			qfi_get(&cfi, &key, &value, &count);
-			i++;
-			kmers.push_back(key);
+			KeyObject k = *it;
 			//freq_file << key << " " << count << std::endl;
-		} while (!qfi_next(&cfi));
-		std::cout << "Total kmers: " << i << std::endl;
+			kmers.push_back(k.key);
+			++it;
+		} while (!it.done());
 	}
 
 	std::cout << "Querying kmers in the QF" << std::endl;
@@ -142,7 +123,7 @@ int main ( int argc, char *argv[] )
 	gettimeofday(&start, &tzp);
 	for (uint32_t i = 0; i < num_query || i < kmers.size(); i++) {
 		/*std::cout << "index: " << id << std::endl;*/
-		if (!qf_count_key_value(&cf, kmers[i],0)) {
+		if (!cqf.query(KeyObject(kmers[i], 0, 0))) {
 			num_not_found++;
 			//std::cout << "Can not find the kmer: " << kmers[id] << std::endl;
 			//abort();

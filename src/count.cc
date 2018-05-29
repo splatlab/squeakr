@@ -43,11 +43,12 @@
 #include <sys/mman.h>
 
 #include "clipp.h"
-#include "cqf.h"
+#include "gqf_cpp.h"
 #include "hashutil.h"
 #include "chunk.h"
 #include "kmer.h"
 #include "reader.h"
+#include "util.h"
 
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) \
 												- 1ULL)
@@ -62,49 +63,9 @@ typedef struct {
 	bool exact;
 } flush_object;
 
-struct file_pointer {
-	std::unique_ptr<reader> freader{nullptr};
-	char* part{nullptr};
-	char* part_buffer{nullptr};
-	int mode{0};
-	uint64_t size{0};
-	uint64_t part_filled{0};
-};
-
 /*create a multi-prod multi-cons queue for storing the chunk of fastq file.*/
 boost::lockfree::queue<file_pointer*, boost::lockfree::fixed_sized<true> > ip_files(64);
 boost::atomic<int> num_files {0};
-
-/* Count distinct items in a sorted list */
-uint64_t count_distinct_kmers(multiset<__int128_t> kmers)
-{
-	uint64_t cnt = 0;
-	__int128_t curr_kmer = 0;
-
-	for(__int128_t kmer: kmers) {
-		if (kmer != curr_kmer) {
-			curr_kmer = kmer;
-			cnt++;
-		}
-	}
-	return cnt;
-}
-
-/* Print elapsed time using the start and end timeval */
-void print_time_elapsed(string desc, struct timeval* start, struct timeval*
-												end)
-{
-	struct timeval elapsed;
-	if (start->tv_usec > end->tv_usec) {
-		end->tv_usec += 1000000;
-		end->tv_sec--;
-	}
-	elapsed.tv_usec = end->tv_usec - start->tv_usec;
-	elapsed.tv_sec = end->tv_sec - start->tv_sec;
-	float time_elapsed = (elapsed.tv_sec * 1000000 + elapsed.tv_usec)/1000000.f;
-	std::cout << desc << "Total Time Elapsed: " << to_string(time_elapsed) << 
-		"seconds" << std::endl;
-}
 
 /* dump the contents of a local QF into the main QF */
 static void dump_local_qf_to_main(flush_object *obj)
@@ -129,7 +90,7 @@ void reads_to_kmers(chunk &c, flush_object *obj)
 		fs++; // increment the pointer
 
 		fe = static_cast<char*>(memchr(fs, '\n', end-fs)); // read the read
-		string read(fs, fe-fs);
+		std::string read(fs, fe-fs);
 		/*cout << read << std::endl;*/
 
 start_read:
@@ -140,7 +101,7 @@ start_read:
 			__int128_t first_rev = 0;
 			__int128_t item = 0;
 			for(int i = 0; i < obj->ksize; i++) { //First kmer
-				uint8_t curr = kmer::map_base(read[i]);
+				uint8_t curr = Kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
 					read = read.substr(i + 1, read.length());
 					goto start_read;
@@ -149,19 +110,19 @@ start_read:
 				first = first << 2;
 			}
 			first = first >> 2;
-			first_rev = kmer::reverse_complement(first, obj->ksize);
+			first_rev = Kmer::reverse_complement(first, obj->ksize);
 
-			if (kmer::compare_kmers(first, first_rev))
+			if (Kmer::compare_kmers(first, first_rev))
 				item = first;
 			else
 				item = first_rev;
 
 			// hash the kmer using murmurhash/intHash before adding to the list
-			if (exact)
+			if (obj->exact)
 				item = HashUtil::hash_64(item, BITMASK(2 * obj->ksize));
 			else
 				item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																			 obj->local_cqf->metadata->seed);
+																			 obj->local_cqf->seed());
 			/*
 			 * first try and insert in the main QF.
 			 * If lock can't be accuired in the first attempt then
@@ -182,26 +143,26 @@ start_read:
 			uint64_t next_rev = first_rev >> 2;
 
 			for(uint32_t i = obj->ksize; i < read.length(); i++) { //next kmers
-				uint8_t curr = kmer::map_base(read[i]);
+				uint8_t curr = Kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
 					read = read.substr(i + 1, read.length());
 					goto start_read;
 				}
 				next |= curr;
-				uint64_t tmp = kmer::reverse_complement_base(curr);
+				uint64_t tmp = Kmer::reverse_complement_base(curr);
 				tmp <<= (obj->ksize * 2 - 2);
 				next_rev = next_rev | tmp;
-				if (kmer::compare_kmers(next, next_rev))
+				if (Kmer::compare_kmers(next, next_rev))
 					item = next;
 				else
 					item = next_rev;
 
 				// hash the kmer using murmurhash/intHash before adding to the list
-				if (exact)
+				if (obj->exact)
 					item = HashUtil::hash_64(item, BITMASK(2 * obj->ksize));
 				else
 					item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																				 obj->local_cqf->metadata->seed);
+																				 obj->local_cqf->seed());
 
 				/*
 				 * first try and insert in the main QF.
@@ -272,19 +233,19 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 }
 
 /* main method */
-int main(int argc, char *argv[])
+int count_main(int argc, char *argv[])
 {
 	int mode = 0;
-	bool exact = 0;
+	int exact = 0;
 	int ksize;
 	int qbits;
 	int numthreads;
-	string filename;
+	std::string filename;
 	std::string prefix = "./";
 	std::vector<std::string> filenames;
 	using namespace clipp;
 	auto cli = (
-									required("-e",).set(exact, 1) % "squeakr-exact",
+									required("-e", "--exact").set(exact, 1) % "squeakr-exact",
 									required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to count",
 									required("-s","--log-slots") & value("log-slots", qbits) % "log of number of slots in the CQF",
 									required("-t","--threads") & value("num-threads", numthreads) % "number of threads to use to count",
@@ -311,10 +272,10 @@ int main(int argc, char *argv[])
 	if (exact)
 		num_hash_bits = 2*ksize; // Each base 2 bits.
 
-	string ser_ext(".cqf");
-	string log_ext(".log");
-	string cluster_ext(".cluster");
-	string freq_ext(".freq");
+	std::string ser_ext(".cqf");
+	std::string log_ext(".log");
+	std::string cluster_ext(".cluster");
+	std::string freq_ext(".freq");
 	struct timeval start1, start2, end1, end2;
 	struct timezone tzp;
 	uint32_t OVERHEAD_SIZE = 65535;
@@ -333,14 +294,15 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	string filepath(filenames.front());
+	std::string filepath(filenames.front());
 	auto const pos = filepath.find_last_of('.');
-	string input_ext = filepath.substr(pos + 1);
-	if (strcmp(input_ext, "fastq") || strcmp(input_ext, "fq"))
+	std::string input_ext = filepath.substr(pos + 1);
+	if (input_ext.compare(std::string("fastq")) == 0 ||
+			input_ext.compare(std::string("fq")))
 		mode = 0;
-	else if (strcmp(input_ext, "gz"))
+	else if (input_ext.compare(std::string("gz")))
 		mode = 1;
-	else if (strcmp(input_ext, "bz2"))
+	else if (input_ext.compare(std::string("bz2")))
 		mode = 2;
 	else {
 		std::cout << "Don't support this input file type." << std::endl;
@@ -350,22 +312,22 @@ int main(int argc, char *argv[])
 	if (prefix.back() != '/') {
 		prefix += '/';
 	}
-	string ds_file =      prefix + filename + ser_ext;
-	string log_file =     prefix + filename + log_ext;
-	string cluster_file = prefix + filename + cluster_ext;
-	string freq_file =    prefix + filename + freq_ext;
+	std::string ds_file =      prefix + filename + ser_ext;
+	std::string log_file =     prefix + filename + log_ext;
+	std::string cluster_file = prefix + filename + cluster_ext;
+	std::string freq_file =    prefix + filename + freq_ext;
 
 	// A random large prime number.
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
 	CQF<KeyObject> cqf(qbits, num_hash_bits, LOCKS_OPTIONAL, NONE, seed);
-	CQF<KeyObject> *local_cqfs = (CQF<key_object>*)calloc(MAX_NUM_THREADS,
-																											 sizeof(CQF<key_object>));
+	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
+																											 sizeof(CQF<KeyObject>));
 
 	boost::thread_group prod_threads;
 
 	for (int i = 0; i < numthreads; i++) {
-		local_cfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits,
+		local_cqfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits,
 																	LOCKS_FORBIDDEN, NONE, seed);
 		flush_object* obj = (flush_object*)malloc(sizeof(flush_object));
 		obj->local_cqf = &local_cqfs[i];

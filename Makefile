@@ -18,9 +18,9 @@ ifdef P
 	PROFILE=-pg -no-pie # for bug in gprof.
 endif
 
-CXX = g++ -std=c++11
+CXX = g++ -std=c++14
 CC = gcc -std=gnu11
-LD= g++ -std=c++11
+LD= g++ -std=c++14
 
 LOC_INCLUDE=include
 LOC_SRC=src
@@ -43,20 +43,29 @@ LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
 all: $(TARGETS)
 
 # dependencies between programs and .o files
-squeakr:					$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o $(OBJDIR)/list.o $(OBJDIR)/hashutil.o $(OBJDIR)/kmer.o $(OBJDIR)/util.o
+squeakr:					$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o \
+									$(OBJDIR)/list.o $(OBJDIR)/hashutil.o $(OBJDIR)/kmer.o \
+									$(OBJDIR)/util.o $(OBJDIR)/squeakr.o
 
 # dependencies between .o files and .h files
 
-$(OBJDIR)/count.o: 			$(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h $(LOCAL_INCLUDE)/chunk.h $(LOCAL_INCLUDE)/kmer.h $(LOCAL_INCLUDE)/reader.h
-$(OBJDIR)/query.o: 			$(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h $(LOCAL_INCLUDE)/chunk.h $(LOCAL_INCLUDE)/kmer.h
-$(OBJDIR)/innerprod.o: $(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h
-$(OBJDIR)/list.o: 		 $(LOCAL_INCLUDE)/cqf.h $(LOCAL_INCLUDE)/hashutil.h
-$(OBJDIR)/hashutil.o: 	$(LOCAL_INCLUDE)/hashutil.h
+$(OBJDIR)/squeakr.o:		$(LOC_SRC)/squeakr.cc
+$(OBJDIR)/count.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/hashutil.h \
+												$(LOC_INCLUDE)/chunk.h $(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/reader.h $(LOC_INCLUDE)/util.h
+$(OBJDIR)/query.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/hashutil.h \
+												$(LOC_INCLUDE)/chunk.h $(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/innerprod.o: 	$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/hashutil.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/list.o: 		 	$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/hashutil.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/hashutil.o: 	$(LOC_INCLUDE)/hashutil.h
 $(OBJDIR)/kmer.o: 			$(LOC_SRC)/kmer.cc $(LOC_INCLUDE)/kmer.h
-$(OBJDIR)/util.o: 			$(LOC_SRC)/utill.cc $(LOC_INCLUDE)/util.h
+$(OBJDIR)/util.o: 			$(LOC_SRC)/util.cc $(LOC_INCLUDE)/util.h
 
 # dependencies between .o files and .cc (or .c) files
-$(OBJDIR)/gqf.o: $(LOC_SRC)/cqf/gqf.c $(LOC_INCLUDE)/cqf/gqf.h
+$(OBJDIR)/gqf_cpp.o: $(LOC_SRC)/gqf/gqf.c $(LOC_INCLUDE)/gqf/gqf.h
 
 #
 # generic build rules
@@ -71,7 +80,7 @@ $(OBJDIR)/%.o: $(LOC_SRC)/%.cc | $(OBJDIR)
 $(OBJDIR)/%.o: $(LOC_SRC)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
 
-$(OBJDIR)/%.o: $(LOC_SRC)/cqf/%.c | $(OBJDIR)
+$(OBJDIR)/%.o: $(LOC_SRC)/gqf/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
 
 $(OBJDIR):

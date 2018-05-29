@@ -18,6 +18,37 @@
 
 #include "util.h"
 
+/* Count distinct items in a sorted list */
+uint64_t count_distinct_kmers(std::multiset<__int128_t> kmers)
+{
+	uint64_t cnt = 0;
+	__int128_t curr_kmer = 0;
+
+	for(__int128_t kmer: kmers) {
+		if (kmer != curr_kmer) {
+			curr_kmer = kmer;
+			cnt++;
+		}
+	}
+	return cnt;
+}
+
+/* Print elapsed time using the start and end timeval */
+void print_time_elapsed(std::string desc, struct timeval* start, struct
+												timeval* end)
+{
+	struct timeval elapsed;
+	if (start->tv_usec > end->tv_usec) {
+		end->tv_usec += 1000000;
+		end->tv_sec--;
+	}
+	elapsed.tv_usec = end->tv_usec - start->tv_usec;
+	elapsed.tv_sec = end->tv_sec - start->tv_sec;
+	float time_elapsed = (elapsed.tv_sec * 1000000 + elapsed.tv_usec)/1000000.f;
+	std::cout << desc << "Total Time Elapsed: " << std::to_string(time_elapsed)
+		<< "seconds" << std::endl;
+}
+
 /* check if it's the end of the file. */
 inline bool is_eof(reader &file_reader, int mode) {
 	if (mode == 0)
@@ -77,7 +108,7 @@ static bool fastq_read_parts(int mode, file_pointer *fp) {
 	int64_t i;
 	if(part_filled >= OVERHEAD_SIZE)
 	{
-		cout << "Error: Wrong input file!\n";
+		std::cout << "Error: Wrong input file!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	if(is_eof(file_reader, mode))
@@ -123,7 +154,7 @@ static bool fastq_read_parts(int mode, file_pointer *fp) {
 		}
 	}
 
-	copy(_part+_size, _part+total_filled, part_buffer);
+	std::copy(_part+_size, _part+total_filled, part_buffer);
 	part_filled = total_filled - _size;
 
 	return true;

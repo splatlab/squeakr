@@ -27,12 +27,17 @@
 #include <string.h>
 #include <math.h>
 
-#include "cqf/gqf.h"
-#include "cqf/gqf_file.h"
+#include "gqf/gqf.h"
+#include "gqf/gqf_file.h"
 #include "util.h"
 
 #define NUM_HASH_BITS 24
 #define NUM_Q_BITS 16
+
+enum readmode {
+	MMAP,
+	FREAD
+};
 
 template <class key_obj>
 class CQF {
@@ -40,18 +45,21 @@ class CQF {
 		CQF();
 		CQF(uint64_t q_bits, uint64_t key_bits, enum lockingmode lock, enum
 				hashmode hash, uint32_t seed);
-		CQF(std::string& filename, bool flag);
+		CQF(std::string& filename, enum lockingmode lock, enum readmode flag);
 		CQF(const CQF<key_obj>& copy_cqf);
 
-		void insert(const key_obj& k);
+		bool insert(const key_obj& k);
 
 		/* Will return the count. */
 		uint64_t query(const key_obj& k);
+
+		uint64_t inner_prod(const CQF<key_obj>& in_cqf);
 
 		void serialize(std::string filename) {
 			qf_serialize(&cqf, filename.c_str());
 		}
 
+		const QF* get_cqf(void) const { return &cqf; }
 		uint64_t range(void) const { return cqf.metadata->range; }
 		uint32_t seed(void) const { return cqf.metadata->seed; }
 		uint32_t keybits(void) const { return cqf.metadata->key_bits; }
@@ -102,7 +110,7 @@ class KeyObject {
 
 template <class key_obj>
 CQF<key_obj>::CQF() {
-	if (!qf_malloc(&qf, 1ULL << NUM_Q_BITS, NUM_HASH_BITS, 0, LOCKS_REQUIRED,
+	if (!qf_malloc(&cqf, 1ULL << NUM_Q_BITS, NUM_HASH_BITS, 0, LOCKS_REQUIRED,
 								 DEFAULT, 2038074761)) {
 		ERROR("Can't allocate the CQF");
 		exit(EXIT_FAILURE);
@@ -112,17 +120,18 @@ CQF<key_obj>::CQF() {
 template <class key_obj>
 CQF<key_obj>::CQF(uint64_t q_bits, uint64_t key_bits, enum lockingmode lock,
 									enum hashmode hash, uint32_t seed) {
-	if (!qf_malloc(&qf, 1ULL << q_bits, key_bits, 0, lock, hash, 2038074761)) {
+	if (!qf_malloc(&cqf, 1ULL << q_bits, key_bits, 0, lock, hash, 2038074761)) {
 		ERROR("Can't allocate the CQF");
 		exit(EXIT_FAILURE);
 	}
 }
 
 template <class key_obj>
-CQF<key_obj>::CQF(std::string& filename, enum lockingmode lock, bool flag) {
+CQF<key_obj>::CQF(std::string& filename, enum lockingmode lock, enum readmode
+									flag) {
 	uint64_t size = 0;
-	if (flag)
-	 size = qf_usefile(&cqf, lock, filename);
+	if (flag == MMAP)
+	 size = qf_usefile(&cqf, lock, filename.c_str());
 	else
 		size = qf_deserialize(&cqf, lock, filename.c_str());
 
@@ -134,12 +143,12 @@ CQF<key_obj>::CQF(std::string& filename, enum lockingmode lock, bool flag) {
 
 template <class key_obj>
 CQF<key_obj>::CQF(const CQF<key_obj>& copy_cqf) {
-	memcpy(cqf, copy_cqf.get_cqf(), sizeof(QF));
+	memcpy(&cqf, copy_cqf.get_cqf(), sizeof(QF));
 }
 
 template <class key_obj>
-void CQF<key_obj>::insert(const key_obj& k) {
-	qf_insert(&cqf, k.key, k.value, k.count, LOCK_AND_SPIN);
+bool CQF<key_obj>::insert(const key_obj& k) {
+	return qf_insert(&cqf, k.key, k.value, k.count);
 	// To validate the CQF
 	//set.insert(k.key);
 }
@@ -149,7 +158,12 @@ uint64_t CQF<key_obj>::query(const key_obj& k) {
 	return qf_count_key_value(&cqf, k.key, k.value);
 }
 
-	template <class key_obj>
+template <class key_obj>
+uint64_t CQF<key_obj>::inner_prod(const CQF<key_obj>& in_cqf) {
+	return qf_inner_product(&cqf, in_cqf.get_cqf());
+}
+
+template <class key_obj>
 CQF<key_obj>::Iterator::Iterator(QFi it)
 	: iter(it) {};
 

@@ -55,9 +55,9 @@ void explore_options_verbose(T& res) {
 }
 
 int query_main (QueryOpts& opt);
-int count_main (BuildOpts& opt);
-int inner_prod_main (BuildOpts& opt);
-int list_main (BuildOpts& opt);
+int count_main (CountOpts& opt);
+int inner_prod_main (InnerProdOpts& opt);
+int list_main (ListOpts& opt);
 
 /*
  * ===  FUNCTION  =============================================================
@@ -67,7 +67,7 @@ int list_main (BuildOpts& opt);
  */
 int main ( int argc, char *argv[] ) {
   using namespace clipp;
-  enum class mode {count, query, inner_prod, list, validate, help};
+  enum class mode {count, query, inner_prod, list, help};
   mode selected = mode::help;
 
   auto console = spdlog::stdout_color_mt("squeakr_console");
@@ -81,50 +81,8 @@ int main ( int argc, char *argv[] ) {
 
 	start_time = time(NULL);
 
-  /*
-  bool print_version{false};
-  CLI::App app{"Mantis"};
-  app.add_flag("-v,--version", print_version, "print version info");
-
-  auto build_app = app.add_subcommand("build", "build the mantis index");
-  auto query_app = app.add_subcommand("query", "query the mantis index");
-  auto validate_app = app.add_subcommand("validate", "validate the mantis index");
-
-  build_app->add_option("-i,--input-list", bopt.inlist, "file containing list of input filters")->required()->check(CLI::ExistingFile);
-  build_app->add_option("-c,--cutoff-list", bopt.cutoffs, "file containing list of experiment-specific cutoffs")->required()->check(CLI::ExistingFile);
-  build_app->add_option("-o,--output", bopt.out, "directory where results should be written")->required();
-
-  query_app->add_flag("-j,--json", qopt.use_json, "Write the output in JSON format");
-  query_app->add_option("-p,--input-prefix", qopt.prefix, "Prefix of input files.")->required()->check(CLI::ExistingDirectory);
-  query_app->add_option("-o,--output", qopt.output, "Where to write query output.");
-  query_app->add_option("query", qopt.query_file, "Prefix of input files.")->required()->check(CLI::ExistingFile);
-
-  validate_app->add_option("-i,--input-list", vopt.inlist, "file containing list of input filters")->required()->check(CLI::ExistingFile);
-  validate_app->add_option("-c,--cutoff-list", vopt.cutoffs, "file containing list of experiment-specific cutoffs")->required()->check(CLI::ExistingFile);
-  validate_app->add_option("-p,--input-prefix", vopt.prefix, "Directory containing the mantis dbg.")->required()->check(CLI::ExistingDirectory);
-  validate_app->add_option("query", vopt.query_file,"Query file.")->required()->check(CLI::ExistingFile);
-
-  CLI11_PARSE(app, argc, argv);
-
-  if (print_version) {
-    std::cerr << "mantis " << 0.1 << "\n";
-    return 0;
-  }
-
-  if (app.got_subcommand(build_app)) {
-    return build_main(bopt);
-  } else if (app.got_subcommand(query_app)) {
-    return query_main(qopt);
-  } else if (app.got_subcommand(validate_app)) {
-    return validate_main(vopt);
-  } else {
-    std::cout << "I don't know the requested sub-command\n";
-    return 1;
-  }
-  */
-
   auto ensure_file_exists = [](const std::string& s) -> bool {
-    bool exists = mantis::fs::FileExists(s.c_str());
+    bool exists = squeakr::fs::FileExists(s.c_str());
     if (!exists) {
       std::string e = "The required input file " + s + " does not seem to exist.";
       throw std::runtime_error{e};
@@ -133,7 +91,7 @@ int main ( int argc, char *argv[] ) {
   };
 
   auto ensure_dir_exists = [](const std::string& s) -> bool {
-    bool exists = mantis::fs::DirExists(s.c_str());
+    bool exists = squeakr::fs::DirExists(s.c_str());
     if (!exists) {
       std::string e = "The required input directory " + s + " does not seem to exist.";
       throw std::runtime_error{e};
@@ -141,36 +99,38 @@ int main ( int argc, char *argv[] ) {
     return true;
   };
 
-  auto build_mode = (
-                     command("build").set(selected, mode::build),
-                     required("-i", "--input-list") & value(ensure_file_exists, "input_list", bopt.inlist) % "file containing list of input filters",
-                     required("-c", "--cutoff-list") & value(ensure_file_exists, "cutoff_list", bopt.cutoffs) % "file containing list of experiment-specific cutoffs",
-                     option("-t", "--num-threads") & value("num_threads", bopt.numthreads) % "number of threads to use to build",
-                     required("-o", "--output") & value("build_output", bopt.out) % "directory where results should be written"
-                     );
-  auto query_mode = (
-                     command("query").set(selected, mode::query),
-                     option("-j", "--json").set(qopt.use_json) % "Write the output in JSON format",
-                     required("-p", "--input-prefix") & value(ensure_dir_exists, "query_prefix", qopt.prefix) % "Prefix of input files.",
-                     option("-o", "--output") & value("output_file", qopt.output) % "Where to write query output.",
-                     value(ensure_file_exists, "query", qopt.query_file) % "Prefix of input files."
-                     );
+	auto count_mode = (
+									required("-e", "--exact").set(exact, 1) % "squeakr-exact",
+									required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to count",
+									required("-s","--log-slots") & value("log-slots", qbits) % "log of number of slots in the CQF",
+									required("-t","--threads") & value("num-threads", numthreads) % "number of threads to use to count",
+									required("-f","--output-filename") & value("filename", filename) % "output filename",
+									option("-o","--output-dir") & value("out-dir", prefix) % "directory where output should be written (default = \"./\")",
+									values("files", filenames) % "list of files to be counted",
+									option("-h", "--help")      % "show help"
+						 );
 
-  auto validate_mode = (
-                     command("validate").set(selected, mode::validate),
-                     required("-i", "--input-list") & value(ensure_file_exists, "input_list", vopt.inlist) % "file containing list of input filters",
-                     required("-c", "--cutoff-list") & value(ensure_file_exists, "cutoff_list", vopt.cutoffs) % "file containing list of experiment-specific cutoffs",
-                     required("-p", "--input-prefix") & value(ensure_dir_exists, "dbg_prefix", vopt.prefix) % "Directory containing the mantis dbg.",
-                     value(ensure_file_exists, "query", vopt.query_file) % "Query file."
-                     );
+	auto query_mode = (
+							required("-f", "--cqf-file") & value("cqf-file", ds_file) % "input CQF file",
+							required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to query. Must be same the as the size of counted k-mers",
+							required("-n","--num-query") & value("num-query", num_query) % "number of queries",
+							required("-r","--random") & value("random-queries", random) % "random queries",
+							option("-h", "--help")  % "show help"
+						 );
+
+	auto inner_prod_mode = (
+							required("-a", "--cqf-file-first") & value("cqf-file-first", ds_filea) % "first input CQF file",
+							required("-b", "--cqf-file-second") & value("cqf-file-second", ds_fileb) % "second input CQF file",
+							option("-h", "--help")  % "show help"
+						 );
 
   auto cli = (
-              (build_mode | query_mode | validate_mode | command("help").set(selected,mode::help) ),
+              (count_mode | query_mode | inner_prod_mode | command("help").set(selected,mode::help) ),
               option("-v", "--version").call([]{std::cout << "version 1.0\n\n";}).doc("show version")  );
 
-  assert(build_mode.flags_are_prefix_free());
+  assert(count_mode.flags_are_prefix_free());
   assert(query_mode.flags_are_prefix_free());
-  assert(validate_mode.flags_are_prefix_free());
+  assert(inner_prod_mode.flags_are_prefix_free());
 
   decltype(parse(argc, argv, cli)) res;
   try {
@@ -186,9 +146,9 @@ int main ( int argc, char *argv[] ) {
 
   if(res) {
     switch(selected) {
-    case mode::build: build_main(bopt);  break;
+    case mode::count: count_main(bopt);  break;
     case mode::query: query_main(qopt);  break;
-    case mode::validate: validate_main(vopt);  break;
+    case mode::inner_prod: inner_prod_main(vopt);  break;
     case mode::help: std::cout << make_man_page(cli, "mantis"); break;
     }
   } else {
@@ -196,11 +156,11 @@ int main ( int argc, char *argv[] ) {
     auto e = res.end();
     if (std::distance(b,e) > 0) {
       if (b->arg() == "build") {
-        std::cout << make_man_page(build_mode, "mantis");
+        std::cout << make_man_page(count_mode, "mantis");
       } else if (b->arg() == "query") {
         std::cout << make_man_page(query_mode, "mantis");
       } else if (b->arg() == "validate") {
-        std::cout << make_man_page(validate_mode, "mantis");
+        std::cout << make_man_page(inner_prod_mode, "mantis");
       } else {
         std::cout << "There is no command \"" << b->arg() << "\"\n";
         std::cout << usage_lines(cli, "mantis") << '\n';

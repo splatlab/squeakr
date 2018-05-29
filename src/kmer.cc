@@ -1,7 +1,6 @@
 #include <fstream>
 #include "kmer.h"
 
-using namespace kmercounting;
 
 /*return the integer representation of the base */
 inline char Kmer::map_int(uint8_t base)

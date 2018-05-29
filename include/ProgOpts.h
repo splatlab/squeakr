@@ -3,7 +3,7 @@
 #include <memory>
 #include "spdlog/spdlog.h"
 
-class BuildOpts {
+class CountOpts {
  public:
   std::string inlist;
   std::string cutoffs;
@@ -21,7 +21,7 @@ class QueryOpts {
   std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
-class ValidateOpts {
+class InnerProdOpts {
  public:
   std::string inlist;
   std::string cutoffs;
@@ -30,5 +30,9 @@ class ValidateOpts {
   std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
+class ListOpts {
+	public:
+	std::string filename;
+}
 
 #endif //__MANTIS_PROG_OPTS__

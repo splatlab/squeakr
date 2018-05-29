@@ -33,8 +33,8 @@
 #include <fcntl.h>
 
 #include "include/hashutil.h"
-#include "include/gqf.h"
-#include "include/gqf_file.h"
+#include "gqf/gqf.h"
+#include "gqf/gqf_file.h"
 
 
 bool qf_initfile(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t
@@ -81,7 +81,7 @@ bool qf_initfile(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t
 		return false;
 }
 
-uint64_t qf_usefile(QF* qf, enum lockingmode lock, char* filename)
+uint64_t qf_usefile(QF* qf, enum lockingmode lock, const char* filename)
 {
 	struct stat sb;
 	int ret;

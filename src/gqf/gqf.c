@@ -34,7 +34,7 @@
 #include <fcntl.h>
 
 #include "include/hashutil.h"
-#include "include/gqf.h"
+#include "gqf/gqf.h"
 
 /******************************************************************
  * Code for managing the metadata bits and slots w/o interpreting *
@@ -2212,7 +2212,7 @@ inline int qfi_end(const QFi *qfi)
  * insert(min, ic) 
  * increment either ia or ib, whichever is minimum.
  */
-void qf_merge(QF *qfa, QF *qfb, QF *qfc)
+void qf_merge(const QF *qfa, const QF *qfb, QF *qfc)
 {
 	QFi qfia, qfib;
 	qf_iterator(qfa, &qfia, 0);
@@ -2314,7 +2314,7 @@ void qf_multi_merge(const QF *qf_arr[], int nqf, QF *qfr)
 }
 
 /* find cosine similarity between two QFs. */
-uint64_t qf_inner_product(QF *qfa, QF *qfb)
+uint64_t qf_inner_product(const QF *qfa, const QF *qfb)
 {
 	uint64_t acc = 0;
 	QFi qfi;
@@ -2344,7 +2344,7 @@ uint64_t qf_inner_product(QF *qfa, QF *qfb)
 }
 
 /* find cosine similarity between two QFs. */
-void qf_intersect(QF *qfa, QF *qfb, QF *qfr)
+void qf_intersect(const QF *qfa, const QF *qfb, QF *qfr)
 {
 	QFi qfi;
 	QF *qf_mem, *qf_disk;
@@ -2369,7 +2369,7 @@ void qf_intersect(QF *qfa, QF *qfb, QF *qfr)
 }
 
 /* magnitude of a QF. */
-uint64_t qf_magnitude(QF *qf)
+uint64_t qf_magnitude(const QF *qf)
 {
 	return sqrt(qf_inner_product(qf, qf));
 }
