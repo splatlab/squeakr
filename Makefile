@@ -34,7 +34,7 @@ CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)\
 -Wno-implicit-function-declaration
 
 LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
--lboost_thread -lm -lz -lrt
+-lboost_thread -lm -lbz2 -lz -lrt
 
 #
 # declaration of dependencies
@@ -45,7 +45,8 @@ all: $(TARGETS)
 # dependencies between programs and .o files
 squeakr:					$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o \
 									$(OBJDIR)/list.o $(OBJDIR)/hashutil.o $(OBJDIR)/kmer.o \
-									$(OBJDIR)/util.o $(OBJDIR)/squeakr.o
+									$(OBJDIR)/util.o $(OBJDIR)/squeakr.o $(OBJDIR)/gqf.o \
+									$(OBJDIR)/gqf_file.o
 
 # dependencies between .o files and .h files
 
@@ -65,7 +66,8 @@ $(OBJDIR)/kmer.o: 			$(LOC_SRC)/kmer.cc $(LOC_INCLUDE)/kmer.h
 $(OBJDIR)/util.o: 			$(LOC_SRC)/util.cc $(LOC_INCLUDE)/util.h
 
 # dependencies between .o files and .cc (or .c) files
-$(OBJDIR)/gqf_cpp.o: $(LOC_SRC)/gqf/gqf.c $(LOC_INCLUDE)/gqf/gqf.h
+$(OBJDIR)/gqf.o: 				$(LOC_SRC)/gqf/gqf.c $(LOC_INCLUDE)/gqf/gqf.h
+$(OBJDIR)/gqf_file.o: 	$(LOC_SRC)/gqf/gqf_file.c $(LOC_INCLUDE)/gqf/gqf_file.h
 
 #
 # generic build rules
@@ -78,10 +80,10 @@ $(OBJDIR)/%.o: $(LOC_SRC)/%.cc | $(OBJDIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c -o $@ $<
 
 $(OBJDIR)/%.o: $(LOC_SRC)/%.c | $(OBJDIR)
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
+	$(CXX) $(CFLAGS) $(INCLUDE) -c -o $@ $<
 
 $(OBJDIR)/%.o: $(LOC_SRC)/gqf/%.c | $(OBJDIR)
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
+	$(CXX) $(CFLAGS) $(INCLUDE) -c -o $@ $<
 
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)

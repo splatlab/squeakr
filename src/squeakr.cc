@@ -24,6 +24,7 @@
 
 #include "ProgOpts.h"
 #include "clipp.h"
+#include "SqueakrFS.h"
 
 #define MAX_NUM_SAMPLES 2600
 #define SAMPLE_SIZE (1ULL << 26)
@@ -72,12 +73,12 @@ int main ( int argc, char *argv[] ) {
 
   auto console = spdlog::stdout_color_mt("squeakr_console");
 
-  CountOpts bopt;
-  QueryOpts qopt;
-  InnerProdOpts vopt;
-  bopt.console = console;
-  qopt.console = console;
-  vopt.console = console;
+  CountOpts countopt;
+  QueryOpts queryopt;
+  InnerProdOpts innerprodopt;
+  countopt.console = console;
+  queryopt.console = console;
+  innerprodopt.console = console;
 
 	start_time = time(NULL);
 
@@ -100,33 +101,53 @@ int main ( int argc, char *argv[] ) {
   };
 
 	auto count_mode = (
-									required("-e", "--exact").set(exact, 1) % "squeakr-exact",
-									required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to count",
-									required("-s","--log-slots") & value("log-slots", qbits) % "log of number of slots in the CQF",
-									required("-t","--threads") & value("num-threads", numthreads) % "number of threads to use to count",
-									required("-f","--output-filename") & value("filename", filename) % "output filename",
-									option("-o","--output-dir") & value("out-dir", prefix) % "directory where output should be written (default = \"./\")",
-									values("files", filenames) % "list of files to be counted",
+									required("-e", "--exact").set(countopt.exact, 1) %
+									"squeakr-exact",
+									required("-k","--kmer") & value("k-size", countopt.ksize) %
+									"length of k-mers to count",
+									required("-s","--log-slots") & value("log-slots",
+																											 countopt.qbits) % "log of number of slots in the CQF",
+									required("-t","--threads") & value("num-threads",
+																										 countopt.numthreads) %
+									"number of threads to use to count",
+									required("-f","--output-filename") & value("filename",
+																														 countopt.filename)
+									% "output filename",
+									option("-o","--output-dir") & value("out-dir",
+																											countopt.prefix) %
+									"directory where output should be written (default = \"./\")",
+									values("files", countopt.filenames) % "list of files to be counted",
 									option("-h", "--help")      % "show help"
 						 );
 
 	auto query_mode = (
-							required("-f", "--cqf-file") & value("cqf-file", ds_file) % "input CQF file",
-							required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to query. Must be same the as the size of counted k-mers",
-							required("-n","--num-query") & value("num-query", num_query) % "number of queries",
-							required("-r","--random") & value("random-queries", random) % "random queries",
+							required("-f", "--cqf-file") & value("cqf-file",
+																									 queryopt.cqf_file) % "input CQF file",
+							required("-k","--kmer") & value("k-size", queryopt.ksize) %
+							"length of k-mers to query. Must be same the as the size of counted k-mers",
+							required("-n","--num-query") & value("num-query",
+																									 queryopt.num_query) %
+							"number of queries",
+							required("-r","--random") & value("random-queries",
+																								queryopt.random) % "random queries",
 							option("-h", "--help")  % "show help"
 						 );
 
 	auto inner_prod_mode = (
-							required("-a", "--cqf-file-first") & value("cqf-file-first", ds_filea) % "first input CQF file",
-							required("-b", "--cqf-file-second") & value("cqf-file-second", ds_fileb) % "second input CQF file",
+							required("-a", "--cqf-file-first") & value("cqf-file-first",
+																												 innerprodopt.cqf_filea)
+							% "first input CQF file",
+							required("-b", "--cqf-file-second") & value("cqf-file-second",
+																													innerprodopt.cqf_fileb)
+							% "second input CQF file",
 							option("-h", "--help")  % "show help"
 						 );
 
   auto cli = (
-              (count_mode | query_mode | inner_prod_mode | command("help").set(selected,mode::help) ),
-              option("-v", "--version").call([]{std::cout << "version 1.0\n\n";}).doc("show version")  );
+							(count_mode | query_mode | inner_prod_mode |
+							 command("help").set(selected,mode::help) ),
+							option("-v", "--version").call([]{std::cout << "version 1.0\n\n";}).doc("show version")
+							);
 
   assert(count_mode.flags_are_prefix_free());
   assert(query_mode.flags_are_prefix_free());
@@ -136,9 +157,10 @@ int main ( int argc, char *argv[] ) {
   try {
     res = parse(argc, argv, cli);
   } catch (std::exception& e) {
-    std::cout << "\n\nParsing command line failed with exception: " << e.what() << "\n";
+		std::cout << "\n\nParsing command line failed with exception: " <<
+			e.what() << "\n";
     std::cout << "\n\n";
-    std::cout << make_man_page(cli, "mantis");
+    std::cout << make_man_page(cli, "squeakr");
     return 1;
   }
 
@@ -146,27 +168,27 @@ int main ( int argc, char *argv[] ) {
 
   if(res) {
     switch(selected) {
-    case mode::count: count_main(bopt);  break;
-    case mode::query: query_main(qopt);  break;
-    case mode::inner_prod: inner_prod_main(vopt);  break;
-    case mode::help: std::cout << make_man_page(cli, "mantis"); break;
+    case mode::count: count_main(countopt);  break;
+    case mode::query: query_main(queryopt);  break;
+    case mode::inner_prod: inner_prod_main(innerprodopt);  break;
+    case mode::help: std::cout << make_man_page(cli, "squeakr"); break;
     }
   } else {
     auto b = res.begin();
     auto e = res.end();
     if (std::distance(b,e) > 0) {
       if (b->arg() == "build") {
-        std::cout << make_man_page(count_mode, "mantis");
+        std::cout << make_man_page(count_mode, "squeakr");
       } else if (b->arg() == "query") {
-        std::cout << make_man_page(query_mode, "mantis");
-      } else if (b->arg() == "validate") {
-        std::cout << make_man_page(inner_prod_mode, "mantis");
+        std::cout << make_man_page(query_mode, "squeakr");
+      } else if (b->arg() == "inner_prod") {
+        std::cout << make_man_page(inner_prod_mode, "squeakr");
       } else {
         std::cout << "There is no command \"" << b->arg() << "\"\n";
-        std::cout << usage_lines(cli, "mantis") << '\n';
+        std::cout << usage_lines(cli, "squeakr") << '\n';
       }
     } else {
-      std::cout << usage_lines(cli, "mantis") << '\n';
+      std::cout << usage_lines(cli, "squeakr") << '\n';
     }
   }
   

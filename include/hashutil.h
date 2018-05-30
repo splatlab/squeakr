@@ -22,7 +22,6 @@
 #define _HASHUTIL_H_
 
 #include <sys/types.h>
-#include <string>
 #include <stdlib.h>
 #include <stdint.h>
 

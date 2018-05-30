@@ -1,38 +1,40 @@
-#ifndef __MANTIS_PROG_OPTS__
-#define __MANTIS_PROG_OPTS__
+#ifndef __PROG_OPTS__
+#define __PROG_OPTS__
+
 #include <memory>
 #include "spdlog/spdlog.h"
 
 class CountOpts {
  public:
-  std::string inlist;
-  std::string cutoffs;
-  std::string out;
+	int exact;
+	int ksize;
+	int qbits;
 	int numthreads{1};
+	std::string filename;
+  std::string prefix;
+	std::vector<std::string> filenames;
   std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
 class QueryOpts {
  public:
-  std::string prefix;
-  std::string output{"samples.output"};
-  std::string query_file;
-  bool use_json{false};
+  std::string cqf_file;
+	int ksize;
+	int num_query;
+	int random;
   std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
 class InnerProdOpts {
  public:
-  std::string inlist;
-  std::string cutoffs;
-  std::string prefix;
-  std::string query_file;
+  std::string cqf_filea;
+  std::string cqf_fileb;
   std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
 class ListOpts {
 	public:
 	std::string filename;
-}
+};
 
 #endif //__MANTIS_PROG_OPTS__
