@@ -26,11 +26,6 @@
 #include "clipp.h"
 #include "SqueakrFS.h"
 
-#define MAX_NUM_SAMPLES 2600
-#define SAMPLE_SIZE (1ULL << 26)
-
-uint64_t start_time;
-
 template <typename T>
 void explore_options_verbose(T& res) {
   if(res.any_error()) { std::cerr << "error\n"; }
@@ -80,8 +75,6 @@ int main ( int argc, char *argv[] ) {
   queryopt.console = console;
   innerprodopt.console = console;
 
-	start_time = time(NULL);
-
   auto ensure_file_exists = [](const std::string& s) -> bool {
     bool exists = squeakr::fs::FileExists(s.c_str());
     if (!exists) {
@@ -101,8 +94,9 @@ int main ( int argc, char *argv[] ) {
   };
 
 	auto count_mode = (
-									required("-e", "--exact").set(countopt.exact, 1) %
-									"squeakr-exact",
+									command("count").set(selected, mode::count),
+									option("-e", "--exact").set(countopt.exact, 1) %
+									"squeakr-exact (default is Squeake approximate)",
 									required("-k","--kmer") & value("k-size", countopt.ksize) %
 									"length of k-mers to count",
 									required("-s","--log-slots") & value("log-slots",
@@ -121,6 +115,7 @@ int main ( int argc, char *argv[] ) {
 						 );
 
 	auto query_mode = (
+							command("query").set(selected, mode::query),
 							required("-f", "--cqf-file") & value("cqf-file",
 																									 queryopt.cqf_file) % "input CQF file",
 							required("-k","--kmer") & value("k-size", queryopt.ksize) %
@@ -134,6 +129,7 @@ int main ( int argc, char *argv[] ) {
 						 );
 
 	auto inner_prod_mode = (
+							command("inner_prod").set(selected, mode::inner_prod),
 							required("-a", "--cqf-file-first") & value("cqf-file-first",
 																												 innerprodopt.cqf_filea)
 							% "first input CQF file",
@@ -164,8 +160,6 @@ int main ( int argc, char *argv[] ) {
     return 1;
   }
 
-  //explore_options_verbose(res);
-
   if(res) {
     switch(selected) {
     case mode::count: count_main(countopt);  break;
@@ -177,7 +171,7 @@ int main ( int argc, char *argv[] ) {
     auto b = res.begin();
     auto e = res.end();
     if (std::distance(b,e) > 0) {
-      if (b->arg() == "build") {
+      if (b->arg() == "count") {
         std::cout << make_man_page(count_mode, "squeakr");
       } else if (b->arg() == "query") {
         std::cout << make_man_page(query_mode, "squeakr");
@@ -191,6 +185,6 @@ int main ( int argc, char *argv[] ) {
       std::cout << usage_lines(cli, "squeakr") << '\n';
     }
   }
-  
+
   return 0;
 }
