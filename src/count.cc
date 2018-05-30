@@ -156,6 +156,7 @@ start_read:
 				 * If lock can't be accuired in the first attempt then
 				 * insert the item in the local QF.
 				 */
+				KeyObject k(item%obj->main_cqf->range(), 0, 1);
 				if (!obj->main_cqf->insert(k)) {
 					obj->local_cqf->insert(k);
 					obj->count++;
@@ -299,6 +300,7 @@ int count_main(CountOpts &opts)
 		obj->main_cqf = &cqf;
 		obj->ksize = opts.ksize;
 		obj->exact = opts.exact;
+		obj->count = 0;
 		prod_threads.add_thread(new boost::thread(fastq_to_uint64kmers_prod,
 																							obj));
 	}

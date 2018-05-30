@@ -1634,10 +1634,6 @@ uint64_t qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits
 	qf->metadata = (qfmetadata *)(buffer);
 	qf->blocks = (qfblock *)(qf->metadata + 1);
 
-	qf->runtimedata->lock_mode = lock;
-	qf->runtimedata->num_locks = (qf->metadata->xnslots/NUM_SLOTS_TO_LOCK)+2;
-	qf->runtimedata->f_info.filepath = NULL;
-
 	qf->metadata->auto_resize = 0;
 	qf->metadata->hash_mode = hash;
 	qf->metadata->total_size_in_bytes = size;
@@ -1656,6 +1652,10 @@ uint64_t qf_init(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t value_bits
 	qf->metadata->nelts = 0;
 	qf->metadata->ndistinct_elts = 0;
 	qf->metadata->noccupied_slots = 0;
+
+	qf->runtimedata->lock_mode = lock;
+	qf->runtimedata->num_locks = (qf->metadata->xnslots/NUM_SLOTS_TO_LOCK)+2;
+	qf->runtimedata->f_info.filepath = NULL;
 
 	/* initialize all the locks to 0 */
 	qf->runtimedata->metadata_lock = 0;
