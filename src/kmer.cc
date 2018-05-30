@@ -3,7 +3,7 @@
 
 
 /*return the integer representation of the base */
-inline char Kmer::map_int(uint8_t base)
+char Kmer::map_int(uint8_t base)
 {
 	switch(base) {
 		case DNA_MAP::A: { return 'A'; }
@@ -15,7 +15,7 @@ inline char Kmer::map_int(uint8_t base)
 }
 
 /*return the integer representation of the base */
-inline uint8_t Kmer::map_base(char base)
+uint8_t Kmer::map_base(char base)
 {
 	switch(base) {
 		case 'A': { return DNA_MAP::A; }
@@ -64,7 +64,7 @@ std::string int_to_str(__int128_t kmer, uint64_t kmer_size)
 }
 
 /* Return the reverse complement of a base */
-inline int Kmer::reverse_complement_base(int x) { return 3 - x; }
+int Kmer::reverse_complement_base(int x) { return 3 - x; }
 
 /* Calculate the revsese complement of a kmer */
 __int128_t Kmer::reverse_complement(__int128_t kmer, uint64_t kmer_size)
@@ -86,7 +86,7 @@ __int128_t Kmer::reverse_complement(__int128_t kmer, uint64_t kmer_size)
  * Return true if the kmer is greater than or equal to its
  * reverse complement. 
  * */
-inline bool Kmer::compare_kmers(__int128_t kmer, __int128_t kmer_rev)
+bool Kmer::compare_kmers(__int128_t kmer, __int128_t kmer_rev)
 {
 	return kmer >= kmer_rev;
 }

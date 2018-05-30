@@ -33,7 +33,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "include/hashutil.h"
+#include "gqf/hashutil.h"
 #include "gqf/gqf.h"
 
 /******************************************************************
@@ -2193,7 +2193,7 @@ int qfi_next(QFi *qfi)
 	}
 }
 
-inline int qfi_end(const QFi *qfi)
+int qfi_end(const QFi *qfi)
 {
 	if (qfi->current >= qfi->qf->metadata->xnslots /*&& is_runend(qfi->qf, qfi->current)*/)
 		return 1;
@@ -2318,7 +2318,7 @@ uint64_t qf_inner_product(const QF *qfa, const QF *qfb)
 {
 	uint64_t acc = 0;
 	QFi qfi;
-	QF *qf_mem, *qf_disk;
+	const QF *qf_mem, *qf_disk;
 
 	// create the iterator on the larger QF.
 	if (qfa->metadata->total_size_in_bytes > qfb->metadata->total_size_in_bytes)
@@ -2347,7 +2347,7 @@ uint64_t qf_inner_product(const QF *qfa, const QF *qfb)
 void qf_intersect(const QF *qfa, const QF *qfb, QF *qfr)
 {
 	QFi qfi;
-	QF *qf_mem, *qf_disk;
+	const QF *qf_mem, *qf_disk;
 
 	// create the iterator on the larger QF.
 	if (qfa->metadata->total_size_in_bytes > qfb->metadata->total_size_in_bytes)

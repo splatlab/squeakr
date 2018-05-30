@@ -43,8 +43,8 @@
 #include <sys/mman.h>
 
 #include "clipp.h"
+#include "ProgOpts.h"
 #include "gqf_cpp.h"
-#include "hashutil.h"
 #include "chunk.h"
 #include "kmer.h"
 #include "reader.h"
@@ -117,12 +117,6 @@ start_read:
 			else
 				item = first_rev;
 
-			// hash the kmer using murmurhash/intHash before adding to the list
-			if (obj->exact)
-				item = HashUtil::hash_64(item, BITMASK(2 * obj->ksize));
-			else
-				item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																			 obj->local_cqf->seed());
 			/*
 			 * first try and insert in the main QF.
 			 * If lock can't be accuired in the first attempt then
@@ -156,13 +150,6 @@ start_read:
 					item = next;
 				else
 					item = next_rev;
-
-				// hash the kmer using murmurhash/intHash before adding to the list
-				if (obj->exact)
-					item = HashUtil::hash_64(item, BITMASK(2 * obj->ksize));
-				else
-					item = HashUtil::MurmurHash64A(((void*)&item), sizeof(item),
-																				 obj->local_cqf->seed());
 
 				/*
 				 * first try and insert in the main QF.
@@ -203,7 +190,7 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 
 	while (num_files) {
 		while (ip_files.pop(fp)) {
-			if (fastq_read_parts(fp->mode, fp)) {
+			if (reader::fastq_read_parts(fp->mode, fp)) {
 				ip_files.push(fp);
 				chunk c(fp->part, fp->size);
 				reads_to_kmers(c, obj);
@@ -233,44 +220,22 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 }
 
 /* main method */
-int count_main(int argc, char *argv[])
+int count_main(CountOpts &opts)
 {
 	int mode = 0;
-	int exact = 0;
-	int ksize;
-	int qbits;
-	int numthreads;
-	std::string filename;
-	std::string prefix = "./";
-	std::vector<std::string> filenames;
-	using namespace clipp;
-	auto cli = (
-									required("-e", "--exact").set(exact, 1) % "squeakr-exact",
-									required("-k","--kmer") & value("k-size", ksize) % "length of k-mers to count",
-									required("-s","--log-slots") & value("log-slots", qbits) % "log of number of slots in the CQF",
-									required("-t","--threads") & value("num-threads", numthreads) % "number of threads to use to count",
-									required("-f","--output-filename") & value("filename", filename) % "output filename",
-									option("-o","--output-dir") & value("out-dir", prefix) % "directory where output should be written (default = \"./\")",
-									values("files", filenames) % "list of files to be counted",
-									option("-h", "--help")      % "show help"
-						 );
 
-	auto res = parse(argc, argv, cli);
-
-	if (!res) {
-		std::cout << make_man_page(cli, argv[0]) << std::endl;
-		return 1;
-	}
-
-	if (exact && ksize > 32) {
-		std::cout << "Can't support k-mer size > 32 for squeakr-exact." <<
+	if (opts.exact && opts.ksize > 32) {
+		std::cout << "Does not support k-mer size > 32 for squeakr-exact." <<
 			std::endl;
 		return 1;
 	}
-
-	int num_hash_bits = qbits+8;	// we use 8 bits for remainders in the main QF
-	if (exact)
-		num_hash_bits = 2*ksize; // Each base 2 bits.
+	
+	enum hashmode hash = DEFAULT;
+	int num_hash_bits = opts.qbits+8;	// we use 8 bits for remainders in the main QF
+	if (opts.exact) {
+		num_hash_bits = 2*opts.ksize; // Each base 2 bits.
+		hash = INVERTIBLE;
+	}
 
 	std::string ser_ext(".cqf");
 	std::string log_ext(".log");
@@ -280,9 +245,24 @@ int count_main(int argc, char *argv[])
 	struct timezone tzp;
 	uint32_t OVERHEAD_SIZE = 65535;
 
-	for( auto& fn : filenames ) {
+	std::string filepath(opts.filenames.front());
+	auto const pos = filepath.find_last_of('.');
+	std::string input_ext = filepath.substr(pos + 1);
+	if (input_ext.compare(std::string("fastq")) == 0 ||
+			input_ext.compare(std::string("fq")))
+		mode = 0;
+	else if (input_ext.compare(std::string("gz")))
+		mode = 1;
+	else if (input_ext.compare(std::string("bz2")))
+		mode = 2;
+	else {
+		std::cout << "Does not support this input file type." << std::endl;
+		return 1;
+	}
+
+	for( auto& fn : opts.filenames ) {
 		auto* fr = new reader;
-		if (getFileReader(mode, fn.c_str(), fr)) {
+		if (reader::getFileReader(mode, fn.c_str(), fr)) {
 			file_pointer* fp = new file_pointer;
 			fp->mode = mode;
 			fp->freader.reset(fr);
@@ -294,46 +274,31 @@ int count_main(int argc, char *argv[])
 		}
 	}
 
-	std::string filepath(filenames.front());
-	auto const pos = filepath.find_last_of('.');
-	std::string input_ext = filepath.substr(pos + 1);
-	if (input_ext.compare(std::string("fastq")) == 0 ||
-			input_ext.compare(std::string("fq")))
-		mode = 0;
-	else if (input_ext.compare(std::string("gz")))
-		mode = 1;
-	else if (input_ext.compare(std::string("bz2")))
-		mode = 2;
-	else {
-		std::cout << "Don't support this input file type." << std::endl;
-		return 1;
+	if (opts.prefix.back() != '/') {
+		opts.prefix += '/';
 	}
-
-	if (prefix.back() != '/') {
-		prefix += '/';
-	}
-	std::string ds_file =      prefix + filename + ser_ext;
-	std::string log_file =     prefix + filename + log_ext;
-	std::string cluster_file = prefix + filename + cluster_ext;
-	std::string freq_file =    prefix + filename + freq_ext;
+	std::string ds_file =      opts.prefix + opts.filename + ser_ext;
+	std::string log_file =     opts.prefix + opts.filename + log_ext;
+	std::string cluster_file = opts.prefix + opts.filename + cluster_ext;
+	std::string freq_file =    opts.prefix + opts.filename + freq_ext;
 
 	// A random large prime number.
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
-	CQF<KeyObject> cqf(qbits, num_hash_bits, LOCKS_OPTIONAL, NONE, seed);
+	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, LOCKS_OPTIONAL, hash, seed);
 	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
 																											 sizeof(CQF<KeyObject>));
 
 	boost::thread_group prod_threads;
 
-	for (int i = 0; i < numthreads; i++) {
+	for (int i = 0; i < opts.numthreads; i++) {
 		local_cqfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits,
-																	LOCKS_FORBIDDEN, NONE, seed);
+																	LOCKS_FORBIDDEN, hash, seed);
 		flush_object* obj = (flush_object*)malloc(sizeof(flush_object));
 		obj->local_cqf = &local_cqfs[i];
 		obj->main_cqf = &cqf;
-		obj->ksize = ksize;
-		obj->exact = exact;
+		obj->ksize = opts.ksize;
+		obj->exact = opts.exact;
 		prod_threads.add_thread(new boost::thread(fastq_to_uint64kmers_prod,
 																							obj));
 	}

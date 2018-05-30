@@ -22,21 +22,19 @@
 #include <stdio.h>
 #include <string>
 
-#include "hashutil.h"
-
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) \
 												- 1ULL)
 enum DNA_MAP {C, A, T, G};  // A=1, C=0, T=2, G=3
 
 class Kmer {
 	public:
-		static inline char map_int(uint8_t base);
-		static inline uint8_t map_base(char base);
+		static char map_int(uint8_t base);
+		static uint8_t map_base(char base);
 		static __int128_t str_to_int(std::string str);
 		static std::string int_to_str(__int128_t kmer, uint64_t kmer_size);
-		static inline int reverse_complement_base(int x);
+		static int reverse_complement_base(int x);
 		static __int128_t reverse_complement(__int128_t kmer, uint64_t kmer_size);
-		static inline bool compare_kmers(__int128_t kmer, __int128_t kmer_rev);
+		static bool compare_kmers(__int128_t kmer, __int128_t kmer_rev);
 
 	private:
 		Kmer();

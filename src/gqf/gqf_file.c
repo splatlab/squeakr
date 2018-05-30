@@ -32,7 +32,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "include/hashutil.h"
 #include "gqf/gqf.h"
 #include "gqf/gqf_file.h"
 
@@ -72,7 +71,7 @@ bool qf_initfile(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t
 
 	uint64_t init_size = qf_init(qf, nslots, key_bits, value_bits, lock, hash,
 															 seed, qf->metadata, total_num_bytes);
-	qf->runtimedata->f_info.filepath = malloc(strlen(filename));
+	qf->runtimedata->f_info.filepath = (char *)malloc(strlen(filename));
 	strcpy(qf->runtimedata->f_info.filepath, filename);
 
 	if (init_size == total_num_bytes)
@@ -104,7 +103,7 @@ uint64_t qf_usefile(QF* qf, enum lockingmode lock, const char* filename)
 		exit(EXIT_FAILURE);
 	}
 
-	qf->runtimedata->f_info.filepath = malloc(strlen(filename));
+	qf->runtimedata->f_info.filepath = (char *)malloc(strlen(filename));
 	strcpy(qf->runtimedata->f_info.filepath, filename);
 	qf->runtimedata->lock_mode = lock;
 	/* initialize all the locks to 0 */
@@ -140,7 +139,7 @@ bool qf_closefile(QF* qf)
 bool qf_deletefile(QF* qf)
 {
 	assert(qf->metadata != NULL);
-	char *path = malloc(strlen(qf->runtimedata->f_info.filepath));
+	char *path = (char *)malloc(strlen(qf->runtimedata->f_info.filepath));
 	strcpy(path, qf->runtimedata->f_info.filepath);
 	if (qf_closefile(qf)) {
 		remove(path);
@@ -182,7 +181,7 @@ uint64_t qf_deserialize(QF *qf, enum lockingmode lock, const char *filename)
 	qf->metadata = (qfmetadata *)calloc(sizeof(qfmetadata), 1);
 	fread(qf->metadata, sizeof(qfmetadata), 1, fin);
 
-	qf->runtimedata->f_info.filepath = malloc(strlen(filename));
+	qf->runtimedata->f_info.filepath = (char *)malloc(strlen(filename));
 	strcpy(qf->runtimedata->f_info.filepath, filename);
 	/* initlialize the locks in the QF */
 	qf->runtimedata->lock_mode = lock;
