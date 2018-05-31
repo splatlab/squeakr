@@ -99,7 +99,7 @@ int main ( int argc, char *argv[] ) {
 									"squeakr-exact (default is Squeake approximate)",
 									required("-k","--kmer") & value("k-size", countopt.ksize) %
 									"length of k-mers to count",
-									option("-s","--log-slots") & value("log-slots",
+									required("-s","--log-slots") & value("log-slots",
 																											 countopt.qbits) % "log of number of slots in the CQF",
 									option("-t","--threads") & value("num-threads",
 																										 countopt.numthreads) %

@@ -293,7 +293,6 @@ int count_main(CountOpts &opts)
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
 	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, LOCKS_OPTIONAL, hash, seed);
-	cqf.set_auto_resize();
 	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
 																											 sizeof(CQF<KeyObject>));
 
