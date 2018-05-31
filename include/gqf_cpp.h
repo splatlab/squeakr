@@ -59,6 +59,8 @@ class CQF {
 			qf_serialize(&cqf, filename.c_str());
 		}
 
+		void set_auto_resize(void) { qf_set_auto_resize(&cqf); }
+
 		const QF* get_cqf(void) const { return &cqf; }
 		uint64_t range(void) const { return cqf.metadata->range; }
 		uint32_t seed(void) const { return cqf.metadata->seed; }

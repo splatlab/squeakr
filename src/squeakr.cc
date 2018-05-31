@@ -99,9 +99,9 @@ int main ( int argc, char *argv[] ) {
 									"squeakr-exact (default is Squeake approximate)",
 									required("-k","--kmer") & value("k-size", countopt.ksize) %
 									"length of k-mers to count",
-									required("-s","--log-slots") & value("log-slots",
+									option("-s","--log-slots") & value("log-slots",
 																											 countopt.qbits) % "log of number of slots in the CQF",
-									required("-t","--threads") & value("num-threads",
+									option("-t","--threads") & value("num-threads",
 																										 countopt.numthreads) %
 									"number of threads to use to count",
 									required("-f","--output-filename") & value("filename",

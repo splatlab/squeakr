@@ -6,10 +6,10 @@
 
 class CountOpts {
  public:
-	int exact;
+	int exact {0};
 	int ksize;
-	int qbits;
-	int numthreads{1};
+	int qbits {0};
+	int numthreads{0};
 	std::string filename;
   std::string prefix;
 	std::vector<std::string> filenames;

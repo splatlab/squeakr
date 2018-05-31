@@ -230,7 +230,13 @@ int count_main(CountOpts &opts)
 			std::endl;
 		return 1;
 	}
-	
+
+	if (opts.qbits == 0)
+		opts.qbits = 28;
+
+	if (opts.numthreads == 0)
+		opts.numthreads = std::thread::hardware_concurrency();
+
 	enum hashmode hash = DEFAULT;
 	int num_hash_bits = opts.qbits+8;	// we use 8 bits for remainders in the main QF
 	if (opts.exact) {
@@ -287,6 +293,7 @@ int count_main(CountOpts &opts)
 	uint32_t seed = 2038074761;
 	//Initialize the main  QF
 	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, LOCKS_OPTIONAL, hash, seed);
+	cqf.set_auto_resize();
 	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
 																											 sizeof(CQF<KeyObject>));
 
