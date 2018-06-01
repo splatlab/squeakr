@@ -49,7 +49,8 @@
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) - 1ULL)
 
 // A=1, C=0, T=2, G=3
-void getRandomKmers(int n, uint64_t range, std::vector<uint64_t>& kmers, uint32_t K)
+void getRandomKmers(int n, uint64_t range, std::vector<uint64_t>& kmers,
+										uint32_t K)
 {
 	uint64_t kmer;
 	for (int j = 0; j < n; j++) {
