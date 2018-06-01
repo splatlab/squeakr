@@ -91,7 +91,6 @@ void reads_to_kmers(chunk &c, flush_object *obj)
 
 		fe = static_cast<char*>(memchr(fs, '\n', end-fs)); // read the read
 		std::string read(fs, fe-fs);
-		/*cout << read << std::endl;*/
 
 start_read:
 		if (read.length() < obj->ksize) // start with the next read if length is smaller than K

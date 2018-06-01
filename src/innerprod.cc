@@ -50,23 +50,24 @@ int inner_prod_main(InnerProdOpts& opts)
 	struct timezone tzp;
 
 	srand(time(NULL));
+	spdlog::logger* console = opts.console.get();
 
 	//Initialize the QF
-	std::cout << "Mmap the QF from disk" << std::endl;
+	console->info("Mmaping Squeakr files from disk.");
 	CQF<KeyObject> cfa(opts.cqf_filea, LOCKS_FORBIDDEN, FREAD);
 	CQF<KeyObject> cfb(opts.cqf_fileb, LOCKS_FORBIDDEN, FREAD);
 
 	if (cfa.seed() != cfb.seed()) {
-		std::cerr << "Input CQFs do not have the same seed." << std::endl;
+		console->error("Input CQFs do not have the same seed.");
 		return 1;
 	}
 
-	std::cout << "Performing inner product querries." << std::endl;
+	console->info("Performing inner product querries.");
 
 	gettimeofday(&start, &tzp);
 	inner_prod = cfa.inner_prod(cfb);
 	gettimeofday(&end, &tzp);
-	std::cout << "Inner product: " << inner_prod << std::endl;
+	console->info("Inner product: {}", inner_prod);
 	print_time_elapsed("", &start, &end);
 	
 	return EXIT_SUCCESS;

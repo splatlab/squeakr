@@ -72,15 +72,15 @@ void getRandomKmers(int n, uint64_t range, std::vector<uint64_t>& kmers, uint32_
  */
 int query_main(QueryOpts& opts)
 {
-
 	struct timeval start, end;
 	struct timezone tzp;
 	std::vector<uint64_t> kmers;
 
 	srand(time(NULL));
+	spdlog::logger* console = opts.console.get();
 
 	//Initialize the QF
-	std::cout << "Reading kmers into the QF off the disk" << std::endl;
+	console->info("Reading kmers into the QF off the disk.");
 	CQF<KeyObject> cqf(opts.cqf_file, LOCKS_FORBIDDEN, FREAD);
 
 	if (opts.random) {
@@ -95,7 +95,7 @@ int query_main(QueryOpts& opts)
 		} while (!it.done());
 	}
 
-	std::cout << "Querying kmers in the QF" << std::endl;
+	console->info("Querying kmers in the QF.");
 	random_shuffle ( kmers.begin(), kmers.end() );
 	uint64_t num_not_found = 0;
 	gettimeofday(&start, &tzp);
@@ -110,7 +110,7 @@ int query_main(QueryOpts& opts)
 	gettimeofday(&end, &tzp);
 	print_time_elapsed("", &start, &end);
 
-	std::cout << "Not find: " << num_not_found << std::endl;
+	console->info("Not find: {}", num_not_found);
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
