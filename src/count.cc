@@ -225,9 +225,10 @@ int count_main(CountOpts &opts)
 {
 	int mode = 0;
 
+	spdlog::logger* console = opts.console.get();
+
 	if (opts.exact && opts.ksize > 32) {
-		std::cout << "Does not support k-mer size > 32 for squeakr-exact." <<
-			std::endl;
+		console->error("Does not support k-mer size > 32 for squeakr-exact.");
 		return 1;
 	}
 
@@ -263,7 +264,7 @@ int count_main(CountOpts &opts)
 	else if (input_ext.compare(std::string("bz2")))
 		mode = 2;
 	else {
-		std::cout << "Does not support this input file type." << std::endl;
+		console->error("Does not support this input file type.");
 		return 1;
 	}
 
@@ -311,15 +312,14 @@ int count_main(CountOpts &opts)
 																							obj));
 	}
 
-	std::cout << "Reading from the fastq file and inserting in the QF" <<
-		std::endl;
+	console->info("Reading from the fastq file and inserting in the QF.");
 	gettimeofday(&start1, &tzp);
 	prod_threads.join_all();
 	cqf.serialize(ds_file);
 	gettimeofday(&end1, &tzp);
 	print_time_elapsed("", &start1, &end1);
 
-	std::cout << "Calc freq distribution: " << std::endl;
+	console->info("Calc freq distribution.");
 	//ofstream freq_file;
 	//freq_file.open(freq_file.c_str());
 	uint64_t max_cnt = 0;
@@ -335,11 +335,11 @@ int count_main(CountOpts &opts)
 	gettimeofday(&end2, &tzp);
 	print_time_elapsed("", &start2, &end2);
 
-	std::cout << "Maximum freq: " << max_cnt << std::endl;
+	console->info("Maximum freq: {}", max_cnt);
 	//freq_file.close();
 
-	std::cout << "Num distinct elem: " << cqf.dist_elts() << std::endl;
-	std::cout << "Total num elems: " << cqf.total_elts() << std::endl;
+	console->info("Num distinct elem: {}", cqf.dist_elts());
+	console->info("Total num elems: {}", cqf.total_elts());
 
 	return 0;
 }
