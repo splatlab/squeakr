@@ -108,7 +108,7 @@ int query_main(QueryOpts& opts)
 		}
 	}
 	gettimeofday(&end, &tzp);
-	print_time_elapsed("", &start, &end);
+	print_time_elapsed("", &start, &end, console);
 
 	console->info("Not find: {}", num_not_found);
 

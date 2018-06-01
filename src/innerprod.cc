@@ -68,7 +68,7 @@ int inner_prod_main(InnerProdOpts& opts)
 	inner_prod = cfa.inner_prod(cfb);
 	gettimeofday(&end, &tzp);
 	console->info("Inner product: {}", inner_prod);
-	print_time_elapsed("", &start, &end);
+	print_time_elapsed("", &start, &end, console);
 	
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

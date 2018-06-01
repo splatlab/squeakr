@@ -316,7 +316,7 @@ int count_main(CountOpts &opts)
 	prod_threads.join_all();
 	cqf.serialize(ds_file);
 	gettimeofday(&end1, &tzp);
-	print_time_elapsed("", &start1, &end1);
+	print_time_elapsed("", &start1, &end1, console);
 
 	console->info("Calc freq distribution.");
 	//ofstream freq_file;
@@ -332,7 +332,7 @@ int count_main(CountOpts &opts)
 		++it;
 	} while (!it.done());
 	gettimeofday(&end2, &tzp);
-	print_time_elapsed("", &start2, &end2);
+	print_time_elapsed("", &start2, &end2, console);
 
 	console->info("Maximum freq: {}", max_cnt);
 	//freq_file.close();

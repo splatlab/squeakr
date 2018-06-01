@@ -30,6 +30,8 @@
 #include <cassert>
 #include <fstream>
 
+#include "spdlog/spdlog.h"
+
 #ifdef DEBUG
 #define PRINT_DEBUG 1
 #else
@@ -49,7 +51,7 @@
 } while (0)
 
 void print_time_elapsed(std::string desc, struct timeval* start, struct
-												timeval* end);
+												timeval* end, spdlog::logger* console);
 
 std::string last_part(std::string str, char c);
 
