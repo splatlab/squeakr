@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <unordered_set>
 
 #define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) \
 												- 1ULL)
@@ -35,6 +36,9 @@ class Kmer {
 		static int reverse_complement_base(int x);
 		static __int128_t reverse_complement(__int128_t kmer, uint64_t kmer_size);
 		static bool compare_kmers(__int128_t kmer, __int128_t kmer_rev);
+
+		static void parse_kmers(const char *filename, uint64_t ksize,
+														std::unordered_set<uint64_t>& kmerset);
 
 	private:
 		Kmer();

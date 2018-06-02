@@ -61,6 +61,8 @@ class CQF {
 
 		void set_auto_resize(void) { qf_set_auto_resize(&cqf); }
 
+		bool is_exact(void);
+
 		const QF* get_cqf(void) const { return &cqf; }
 		uint64_t range(void) const { return cqf.metadata->range; }
 		uint32_t seed(void) const { return cqf.metadata->seed; }
@@ -163,6 +165,13 @@ uint64_t CQF<key_obj>::query(const key_obj& k) {
 template <class key_obj>
 uint64_t CQF<key_obj>::inner_prod(const CQF<key_obj>& in_cqf) {
 	return qf_inner_product(&cqf, in_cqf.get_cqf());
+}
+
+template <class key_obj>
+bool CQF<key_obj>::is_exact(void) {
+	if (cqf.metadata->hash_mode == INVERTIBLE)
+		return true;
+	return false;
 }
 
 template <class key_obj>

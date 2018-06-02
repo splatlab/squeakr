@@ -75,7 +75,7 @@ int query_main(QueryOpts& opts)
 {
 	struct timeval start, end;
 	struct timezone tzp;
-	std::vector<uint64_t> kmers;
+	std::unordered_set<uint64_t> kmers;
 
 	srand(time(NULL));
 	spdlog::logger* console = opts.console.get();
@@ -84,28 +84,21 @@ int query_main(QueryOpts& opts)
 	console->info("Reading kmers into the QF off the disk.");
 	CQF<KeyObject> cqf(opts.cqf_file, LOCKS_FORBIDDEN, FREAD);
 
-	if (opts.random) {
-		getRandomKmers(opts.num_query, cqf.range(), kmers, opts.ksize);
-	} else {
-		CQF<KeyObject>::Iterator it = cqf.begin();
-		do {
-			KeyObject k = *it;
-			//freq_file << key << " " << count << std::endl;
-			kmers.push_back(k.key);
-			++it;
-		} while (!it.done());
+	if (cqf.is_exact() && opts.ksize != cqf.keybits()) {
+		console->error("K-mer size is not correct.");
+		return 1;
 	}
 
+	console->info("Parsing query file for {}-mers.", opts.ksize);
+	Kmer::parse_kmers(opts.queryfile.c_str(), opts.ksize, kmers);
+	console->info("Found {} k-mers", kmers.size());
+
 	console->info("Querying kmers in the QF.");
-	random_shuffle ( kmers.begin(), kmers.end() );
 	uint64_t num_not_found = 0;
 	gettimeofday(&start, &tzp);
-	for (uint32_t i = 0; i < opts.num_query || i < kmers.size(); i++) {
-		/*std::cout << "index: " << id << std::endl;*/
-		if (!cqf.query(KeyObject(kmers[i], 0, 0))) {
+	for (auto it = kmers.begin(); it != kmers.end(); ++it) {
+		if (!cqf.query(KeyObject(*it, 0, 0))) {
 			num_not_found++;
-			//std::cout << "Can not find the kmer: " << kmers[id] << std::endl;
-			//abort();
 		}
 	}
 	gettimeofday(&end, &tzp);

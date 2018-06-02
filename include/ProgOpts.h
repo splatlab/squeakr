@@ -19,9 +19,8 @@ class CountOpts {
 class QueryOpts {
  public:
   std::string cqf_file;
-	int ksize;
-	int num_query;
-	int random;
+	int ksize {0};
+	std::string queryfile;
   std::shared_ptr<spdlog::logger> console{nullptr};
 };
 

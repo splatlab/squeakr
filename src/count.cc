@@ -121,7 +121,7 @@ start_read:
 			 * If lock can't be accuired in the first attempt then
 			 * insert the item in the local QF.
 			 */
-			KeyObject k(item%obj->main_cqf->range(), 0, 1);
+			KeyObject k(item, 0, 1);
 			if (!obj->main_cqf->insert(k)) {
 				obj->local_cqf->insert(k);
 				obj->count++;
@@ -155,7 +155,7 @@ start_read:
 				 * If lock can't be accuired in the first attempt then
 				 * insert the item in the local QF.
 				 */
-				KeyObject k(item%obj->main_cqf->range(), 0, 1);
+				KeyObject k(item, 0, 1);
 				if (!obj->main_cqf->insert(k)) {
 					obj->local_cqf->insert(k);
 					obj->count++;

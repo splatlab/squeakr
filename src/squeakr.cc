@@ -120,11 +120,8 @@ int main ( int argc, char *argv[] ) {
 																									 queryopt.cqf_file) % "input CQF file",
 							required("-k","--kmer") & value("k-size", queryopt.ksize) %
 							"length of k-mers to query. Must be same the as the size of counted k-mers",
-							required("-n","--num-query") & value("num-query",
-																									 queryopt.num_query) %
-							"number of queries",
-							required("-r","--random") & value("random-queries",
-																								queryopt.random) % "random queries",
+							required("-q","--query-file") & value("query-file",
+																								queryopt.queryfile) % "input query file",
 							option("-h", "--help")  % "show help"
 						 );
 
