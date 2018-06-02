@@ -30,7 +30,7 @@ uint8_t Kmer::map_base(char base)
  * Converts a string of "ATCG" to a uint64_t
  * where each character is represented by using only two bits
  */
-__int128_t str_to_int(std::string str)
+__int128_t Kmer::str_to_int(std::string str)
 {
 	__int128_t strint = 0;
 	for (auto it = str.begin(); it != str.end(); it++) {
@@ -51,7 +51,7 @@ __int128_t str_to_int(std::string str)
  * Converts a uint64_t to a string of "ACTG"
  * where each character is represented by using only two bits
  */
-std::string int_to_str(__int128_t kmer, uint64_t kmer_size)
+std::string Kmer::int_to_str(__int128_t kmer, uint64_t kmer_size)
 {
 	uint8_t base;
 	std::string str;
@@ -107,7 +107,10 @@ start_read:
 		for(uint32_t i = 0; i < kmer_size; i++) { //First kmer
 			uint8_t curr = Kmer::map_base(read[i]);
 			if (curr > DNA_MAP::G) { // 'N' is encountered
-				read = read.substr(i+1, read.length());
+				if (i + 1 < read.length())
+					read = read.substr(i + 1, read.length());
+				else
+					continue;
 				goto start_read;
 			}
 			first = first | curr;
@@ -129,7 +132,10 @@ start_read:
 		for(uint32_t i=kmer_size; i<read.length(); i++) { //next kmers
 			uint8_t curr = Kmer::map_base(read[i]);
 			if (curr > DNA_MAP::G) { // 'N' is encountered
-				read = read.substr(i+1, read.length());
+				if (i + 1 < read.length())
+					read = read.substr(i + 1, read.length());
+				else
+					continue;
 				goto start_read;
 			}
 			next |= curr;

@@ -43,28 +43,6 @@
 #include "gqf_cpp.h"
 #include "kmer.h"
 
-#include <zlib.h>
-#include <bzlib.h>
-
-#define BITMASK(nbits) ((nbits) == 64 ? 0xffffffffffffffff : (1ULL << (nbits)) - 1ULL)
-
-// A=1, C=0, T=2, G=3
-void getRandomKmers(int n, uint64_t range, std::vector<uint64_t>& kmers,
-										uint32_t K)
-{
-	uint64_t kmer;
-	for (int j = 0; j < n; j++) {
-		kmer = 0;
-		for (uint i = 0; i < K; i++) {
-			uint8_t c = rand()%4;
-			kmer = kmer | c;
-			kmer = kmer << 2;
-		}
-		kmer = kmer >> 2;
-		kmers.push_back(kmer%range);
-	}
-}
-
 /*
  * ===  FUNCTION  ======================================================================
  *         Name:  main

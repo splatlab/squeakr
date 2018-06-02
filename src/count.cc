@@ -82,6 +82,7 @@ static void dump_local_qf_to_main(flush_object *obj)
 /* convert a chunk of the fastq file into kmers */
 void reads_to_kmers(chunk &c, flush_object *obj)
 {
+	std::unordered_set<uint64_t> kmerset;
 	auto fs = c.get_reads();
 	auto fe = c.get_reads();
 	auto end = fs + c.get_size();
@@ -102,7 +103,10 @@ start_read:
 			for(int i = 0; i < obj->ksize; i++) { //First kmer
 				uint8_t curr = Kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
-					read = read.substr(i + 1, read.length());
+					if (i + 1 < read.length())
+						read = read.substr(i + 1, read.length());
+					else
+						continue;
 					goto start_read;
 				}
 				first = first | curr;
@@ -121,6 +125,7 @@ start_read:
 			 * If lock can't be accuired in the first attempt then
 			 * insert the item in the local QF.
 			 */
+			kmerset.insert(item);
 			KeyObject k(item, 0, 1);
 			if (!obj->main_cqf->insert(k)) {
 				obj->local_cqf->insert(k);
@@ -138,7 +143,10 @@ start_read:
 			for(uint32_t i = obj->ksize; i < read.length(); i++) { //next kmers
 				uint8_t curr = Kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
-					read = read.substr(i + 1, read.length());
+					if (i + 1 < read.length())
+						read = read.substr(i + 1, read.length());
+					else
+						continue;
 					goto start_read;
 				}
 				next |= curr;
@@ -155,6 +163,7 @@ start_read:
 				 * If lock can't be accuired in the first attempt then
 				 * insert the item in the local QF.
 				 */
+				kmerset.insert(item);
 				KeyObject k(item, 0, 1);
 				if (!obj->main_cqf->insert(k)) {
 					obj->local_cqf->insert(k);
@@ -179,6 +188,7 @@ next_read:
 		fs++; // increment the pointer
 	}
 	free(c.get_reads());
+	std::cout << "Total distinct kmers " << kmerset.size() << std::endl;
 }
 
 /* read a part of the fastq file, parse it, convert the reads to kmers, and

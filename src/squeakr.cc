@@ -71,9 +71,11 @@ int main ( int argc, char *argv[] ) {
   CountOpts countopt;
   QueryOpts queryopt;
   InnerProdOpts innerprodopt;
+	ListOpts listopt;
   countopt.console = console;
   queryopt.console = console;
   innerprodopt.console = console;
+	listopt.console = console;
 
   auto ensure_file_exists = [](const std::string& s) -> bool {
     bool exists = squeakr::fs::FileExists(s.c_str());
@@ -136,8 +138,17 @@ int main ( int argc, char *argv[] ) {
 							option("-h", "--help")  % "show help"
 						 );
 
+	auto list_mode = (
+							command("list").set(selected, mode::list),
+							required("-f", "--cqf-file") & value("cqf-file",
+																									 listopt.cqf_file) % "input CQF file",
+							required("-o", "--output-file") & value("output-file",
+																									 listopt.output_file) % "output file",
+							option("-h", "--help")  % "show help"
+							);
+
   auto cli = (
-							(count_mode | query_mode | inner_prod_mode |
+							(count_mode | query_mode | inner_prod_mode | list_mode |
 							 command("help").set(selected,mode::help) ),
 							option("-v", "--version").call([]{std::cout << "version 1.0\n\n";}).doc("show version")
 							);
@@ -145,6 +156,7 @@ int main ( int argc, char *argv[] ) {
   assert(count_mode.flags_are_prefix_free());
   assert(query_mode.flags_are_prefix_free());
   assert(inner_prod_mode.flags_are_prefix_free());
+  assert(list_mode.flags_are_prefix_free());
 
   decltype(parse(argc, argv, cli)) res;
   try {
@@ -162,6 +174,7 @@ int main ( int argc, char *argv[] ) {
     case mode::count: count_main(countopt);  break;
     case mode::query: query_main(queryopt);  break;
     case mode::inner_prod: inner_prod_main(innerprodopt);  break;
+    case mode::list: list_main(listopt);  break;
     case mode::help: std::cout << make_man_page(cli, "squeakr"); break;
     }
   } else {
@@ -174,6 +187,8 @@ int main ( int argc, char *argv[] ) {
         std::cout << make_man_page(query_mode, "squeakr");
       } else if (b->arg() == "inner_prod") {
         std::cout << make_man_page(inner_prod_mode, "squeakr");
+      } else if (b->arg() == "list") {
+        std::cout << make_man_page(list_mode, "squeakr");
       } else {
         std::cout << "There is no command \"" << b->arg() << "\"\n";
         std::cout << usage_lines(cli, "squeakr") << '\n';
