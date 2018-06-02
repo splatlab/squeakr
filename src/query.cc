@@ -84,7 +84,7 @@ int query_main(QueryOpts& opts)
 	console->info("Reading kmers into the QF off the disk.");
 	CQF<KeyObject> cqf(opts.cqf_file, LOCKS_FORBIDDEN, FREAD);
 
-	if (cqf.is_exact() && opts.ksize != cqf.keybits()) {
+	if (cqf.is_exact() && opts.ksize*2 != cqf.keybits()) {
 		console->error("K-mer size is not correct.");
 		return 1;
 	}
