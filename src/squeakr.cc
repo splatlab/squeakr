@@ -112,7 +112,7 @@ int main ( int argc, char *argv[] ) {
 									option("-o","--output-dir") & value("out-dir",
 																											countopt.output_dir) %
 									"directory where output should be written (default = \"./\")",
-									values("files", countopt.filenames) % "list of files to be counted"
+									values("files", countopt.filenames) % "list of files to be counted(supported files: fastq and compressed gzip or bzip2 fastq files)"
 									//option("-h", "--help")      % "show help"
 						 );
 
