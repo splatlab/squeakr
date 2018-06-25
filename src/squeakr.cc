@@ -123,7 +123,9 @@ int main ( int argc, char *argv[] ) {
 							required("-k","--kmer") & value("k-size", queryopt.ksize) %
 							"length of k-mers to query. Must be same the as the size of counted k-mers",
 							required("-q","--query-file") & value("query-file",
-																								queryopt.queryfile) % "input query file"
+																								queryopt.queryfile) % "input query file",
+							required("-o", "--output-file") & value("output-file",
+																									 queryopt.output_file) % "output file"
 							//option("-h", "--help")  % "show help"
 						 );
 

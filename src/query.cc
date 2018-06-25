@@ -71,18 +71,23 @@ int query_main(QueryOpts& opts)
 	Kmer::parse_kmers(opts.queryfile.c_str(), opts.ksize, kmers);
 	console->info("Found {} k-mers", kmers.size());
 
+	std::ofstream opfile(opts.output_file.c_str(), std::ofstream::out);
+
 	console->info("Querying kmers in the QF.");
 	uint64_t num_not_found = 0;
 	gettimeofday(&start, &tzp);
 	for (auto it = kmers.begin(); it != kmers.end(); ++it) {
-		if (!cqf.query(KeyObject(*it, 0, 0))) {
+		uint64_t count = cqf.query(KeyObject(*it, 0, 0));
+		if (count == 0)
 			num_not_found++;
-		}
+		else
+			opfile << Kmer::int_to_str(*it, opts.ksize) << "\t" << count << std::endl;
 	}
 	gettimeofday(&end, &tzp);
+	opfile.close();
 	print_time_elapsed("", &start, &end, console);
 
-	console->info("Not find: {}", num_not_found);
+	console->info("Not found: {}", num_not_found);
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

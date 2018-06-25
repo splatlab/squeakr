@@ -69,6 +69,7 @@ int list_main(ListOpts& opts)
 		++it;
 	} while (!it.done());
 	gettimeofday(&end, &tzp);
+	opfile.close();
 	print_time_elapsed("", &start, &end, console);
 
 

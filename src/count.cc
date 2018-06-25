@@ -254,7 +254,7 @@ int count_main(CountOpts &opts)
 		hash = INVERTIBLE;
 	}
 
-	std::string ser_ext(".cqf");
+	std::string ser_ext(".squeakr");
 	std::string log_ext(".log");
 	std::string cluster_ext(".cluster");
 	std::string freq_ext(".freq");

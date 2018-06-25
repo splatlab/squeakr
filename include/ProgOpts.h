@@ -21,6 +21,7 @@ class QueryOpts {
 		std::string cqf_file;
 		int ksize {0};
 		std::string queryfile;
+		std::string output_file;
 		std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
