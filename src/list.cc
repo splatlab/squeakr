@@ -65,7 +65,7 @@ int list_main(ListOpts& opts)
 	gettimeofday(&start, &tzp);
 	do {
 		KeyObject k = *it;
-		opfile << Kmer::int_to_str(k.key, kmer_size) << std::endl;
+		opfile << Kmer::int_to_str(k.key, kmer_size) << "\t" << k.count << std::endl;
 		++it;
 	} while (!it.done());
 	gettimeofday(&end, &tzp);
