@@ -10,8 +10,8 @@ class CountOpts {
 		int ksize;
 		int qbits {0};
 		int numthreads{0};
-		std::string filename;
 		std::string prefix;
+		std::string output_dir;
 		std::vector<std::string> filenames;
 		std::shared_ptr<spdlog::logger> console{nullptr};
 };

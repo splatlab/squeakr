@@ -291,13 +291,13 @@ int count_main(CountOpts &opts)
 		}
 	}
 
-	if (opts.prefix.back() != '/') {
-		opts.prefix += '/';
+	if (opts.output_dir.back() != '/') {
+		opts.output_dir += '/';
 	}
-	std::string ds_file =      opts.prefix + opts.filename + ser_ext;
-	std::string log_file =     opts.prefix + opts.filename + log_ext;
-	std::string cluster_file = opts.prefix + opts.filename + cluster_ext;
-	std::string freq_file =    opts.prefix + opts.filename + freq_ext;
+	std::string ds_file =      opts.output_dir + opts.prefix + ser_ext;
+	std::string log_file =     opts.output_dir + opts.prefix + log_ext;
+	std::string cluster_file = opts.output_dir + opts.prefix + cluster_ext;
+	std::string freq_file =    opts.output_dir + opts.prefix + freq_ext;
 
 	// A random large prime number.
 	uint32_t seed = 2038074761;

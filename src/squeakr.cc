@@ -98,22 +98,22 @@ int main ( int argc, char *argv[] ) {
 	auto count_mode = (
 									command("count").set(selected, mode::count),
 									option("-e", "--exact").set(countopt.exact, 1) %
-									"squeakr-exact (default is Squeake approximate)",
+									"squeakr-exact (default is Squeakr approximate)",
 									required("-k","--kmer") & value("k-size", countopt.ksize) %
 									"length of k-mers to count",
 									required("-s","--log-slots") & value("log-slots",
 																											 countopt.qbits) % "log of number of slots in the CQF",
 									option("-t","--threads") & value("num-threads",
 																										 countopt.numthreads) %
-									"number of threads to use to count",
-									required("-f","--output-filename") & value("filename",
-																														 countopt.filename)
-									% "output filename",
+									"number of threads to use to count (default = number of hardware threads)",
+									required("-p","--prefix") & value("prefix",
+																														 countopt.prefix)
+									% "output file prefix",
 									option("-o","--output-dir") & value("out-dir",
-																											countopt.prefix) %
+																											countopt.output_dir) %
 									"directory where output should be written (default = \"./\")",
-									values("files", countopt.filenames) % "list of files to be counted",
-									option("-h", "--help")      % "show help"
+									values("files", countopt.filenames) % "list of files to be counted"
+									//option("-h", "--help")      % "show help"
 						 );
 
 	auto query_mode = (
@@ -123,8 +123,8 @@ int main ( int argc, char *argv[] ) {
 							required("-k","--kmer") & value("k-size", queryopt.ksize) %
 							"length of k-mers to query. Must be same the as the size of counted k-mers",
 							required("-q","--query-file") & value("query-file",
-																								queryopt.queryfile) % "input query file",
-							option("-h", "--help")  % "show help"
+																								queryopt.queryfile) % "input query file"
+							//option("-h", "--help")  % "show help"
 						 );
 
 	auto inner_prod_mode = (
@@ -134,8 +134,8 @@ int main ( int argc, char *argv[] ) {
 							% "first input CQF file",
 							required("-b", "--cqf-file-second") & value("cqf-file-second",
 																													innerprodopt.cqf_fileb)
-							% "second input CQF file",
-							option("-h", "--help")  % "show help"
+							% "second input CQF file"
+							//option("-h", "--help")  % "show help"
 						 );
 
 	auto list_mode = (
@@ -143,8 +143,8 @@ int main ( int argc, char *argv[] ) {
 							required("-f", "--cqf-file") & value("cqf-file",
 																									 listopt.cqf_file) % "input CQF file",
 							required("-o", "--output-file") & value("output-file",
-																									 listopt.output_file) % "output file",
-							option("-h", "--help")  % "show help"
+																									 listopt.output_file) % "output file"
+							//option("-h", "--help")  % "show help"
 							);
 
   auto cli = (
