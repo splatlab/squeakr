@@ -118,10 +118,8 @@ int main ( int argc, char *argv[] ) {
 
 	auto query_mode = (
 							command("query").set(selected, mode::query),
-							required("-f", "--cqf-file") & value("cqf-file",
-																									 queryopt.cqf_file) % "input CQF file",
-							required("-k","--kmer") & value("k-size", queryopt.ksize) %
-							"length of k-mers to query. Must be same the as the size of counted k-mers",
+							required("-f", "--squeakr-file") & value("squeakr-file",
+																									 queryopt.squeakr_file) % "input squeakr file",
 							required("-q","--query-file") & value("query-file",
 																								queryopt.queryfile) % "input query file",
 							required("-o", "--output-file") & value("output-file",
@@ -131,19 +129,19 @@ int main ( int argc, char *argv[] ) {
 
 	auto inner_prod_mode = (
 							command("inner_prod").set(selected, mode::inner_prod),
-							required("-a", "--cqf-file-first") & value("cqf-file-first",
-																												 innerprodopt.cqf_filea)
-							% "first input CQF file",
-							required("-b", "--cqf-file-second") & value("cqf-file-second",
-																													innerprodopt.cqf_fileb)
-							% "second input CQF file"
+							required("-a", "--squeakr-file-first") & value("squeakr-file-first",
+																												 innerprodopt.squeakr_filea)
+							% "first input squeakr file",
+							required("-b", "--squeakr-file-second") & value("squeakr-file-second",
+																													innerprodopt.squeakr_fileb)
+							% "second input squeakr file"
 							//option("-h", "--help")  % "show help"
 						 );
 
 	auto list_mode = (
 							command("list").set(selected, mode::list),
-							required("-f", "--cqf-file") & value("cqf-file",
-																									 listopt.cqf_file) % "input CQF file",
+							required("-f", "--squeakr-file-file") & value("squeakr-file",
+																									 listopt.squeakr_file) % "input squeakr file",
 							required("-o", "--output-file") & value("output-file",
 																									 listopt.output_file) % "output file"
 							//option("-h", "--help")  % "show help"

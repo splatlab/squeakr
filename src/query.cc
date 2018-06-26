@@ -60,15 +60,25 @@ int query_main(QueryOpts& opts)
 
 	//Initialize the QF
 	console->info("Reading kmers into the QF off the disk.");
-	CQF<KeyObject> cqf(opts.cqf_file, LOCKS_FORBIDDEN, FREAD);
+	CQF<KeyObject> cqf(opts.squeakr_file, LOCKS_FORBIDDEN, FREAD);
 
-	if (cqf.is_exact() && opts.ksize*2 != cqf.keybits()) {
+	// seek to the end of the file and read the k-mer size
+	std::ifstream squeakr_file(opts.squeakr_file, std::ofstream::in);
+	squeakr_file.seekg(0, squeakr_file.end);
+	uint64_t file_size = squeakr_file.tellg();
+	uint64_t kmer_size;
+	squeakr_file.seekg(file_size - sizeof(kmer_size));
+	squeakr_file.read((char*)&kmer_size, sizeof(kmer_size));
+	squeakr_file.close();
+	console->info("kmer size: {}", kmer_size);
+
+	if (cqf.is_exact() && kmer_size*2 != cqf.keybits()) {
 		console->error("K-mer size is not correct.");
 		return 1;
 	}
 
-	console->info("Parsing query file for {}-mers.", opts.ksize);
-	Kmer::parse_kmers(opts.queryfile.c_str(), opts.ksize, kmers);
+	console->info("Parsing query file for {}-mers.", kmer_size);
+	Kmer::parse_kmers(opts.queryfile.c_str(), kmer_size, kmers);
 	console->info("Found {} k-mers", kmers.size());
 
 	std::ofstream opfile(opts.output_file.c_str(), std::ofstream::out);
@@ -81,7 +91,7 @@ int query_main(QueryOpts& opts)
 		if (count == 0)
 			num_not_found++;
 		else
-			opfile << Kmer::int_to_str(*it, opts.ksize) << "\t" << count << std::endl;
+			opfile << Kmer::int_to_str(*it, kmer_size) << "\t" << count << std::endl;
 	}
 	gettimeofday(&end, &tzp);
 	opfile.close();

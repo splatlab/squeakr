@@ -51,7 +51,7 @@ int list_main(ListOpts& opts)
 
 	//Initialize the QF
 	console->info("Reading kmers into the QF off the disk.");
-	CQF<KeyObject> cqf(opts.cqf_file, LOCKS_FORBIDDEN, FREAD);
+	CQF<KeyObject> cqf(opts.squeakr_file, LOCKS_FORBIDDEN, FREAD);
 
 	if (!cqf.is_exact()) {
 		console->error("The file is not generated using Squeakr-exact.");

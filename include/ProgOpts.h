@@ -18,8 +18,7 @@ class CountOpts {
 
 class QueryOpts {
 	public:
-		std::string cqf_file;
-		int ksize {0};
+		std::string squeakr_file;
 		std::string queryfile;
 		std::string output_file;
 		std::shared_ptr<spdlog::logger> console{nullptr};
@@ -27,14 +26,14 @@ class QueryOpts {
 
 class InnerProdOpts {
 	public:
-		std::string cqf_filea;
-		std::string cqf_fileb;
+		std::string squeakr_filea;
+		std::string squeakr_fileb;
 		std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
 class ListOpts {
 	public:
-		std::string cqf_file;
+		std::string squeakr_file;
 		std::string output_file;
 		std::shared_ptr<spdlog::logger> console{nullptr};
 };
