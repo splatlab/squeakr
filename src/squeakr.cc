@@ -101,6 +101,8 @@ int main ( int argc, char *argv[] ) {
 									"squeakr-exact (default is Squeakr approximate)",
 									required("-k","--kmer") & value("k-size", countopt.ksize) %
 									"length of k-mers to count",
+									required("-c","--cutoff") & value("cutoff", countopt.cutoff) %
+									"only output k-mers with count greater than or equal to cutoff (default = 1)",
 									required("-s","--log-slots") & value("log-slots",
 																											 countopt.qbits) % "log of number of slots in the CQF",
 									option("-t","--threads") & value("num-threads",
@@ -112,7 +114,7 @@ int main ( int argc, char *argv[] ) {
 									option("-o","--output-dir") & value("out-dir",
 																											countopt.output_dir) %
 									"directory where output should be written (default = \"./\")",
-									values("files", countopt.filenames) % "list of files to be counted(supported files: fastq and compressed gzip or bzip2 fastq files)"
+									values("files", countopt.filenames) % "list of files to be counted (supported files: fastq and compressed gzip or bzip2 fastq files)"
 									//option("-h", "--help")      % "show help"
 						 );
 
