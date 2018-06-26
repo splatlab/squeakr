@@ -88,8 +88,10 @@ int query_main(QueryOpts& opts)
 	gettimeofday(&start, &tzp);
 	for (auto it = kmers.begin(); it != kmers.end(); ++it) {
 		uint64_t count = cqf.query(KeyObject(*it, 0, 0));
-		if (count == 0)
+		if (count == 0) {
+			std::cout << Kmer::int_to_str(*it, kmer_size) << std::endl;
 			num_not_found++;
+		}
 		else
 			opfile << Kmer::int_to_str(*it, kmer_size) << "\t" << count << std::endl;
 	}

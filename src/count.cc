@@ -122,7 +122,7 @@ start_read:
 
 			/*
 			 * first try and insert in the main QF.
-			 * If lock can't be accuired in the first attempt then
+			 * If lock can't be acquired in the first attempt then
 			 * insert the item in the local QF.
 			 */
 			kmerset.insert(item);
