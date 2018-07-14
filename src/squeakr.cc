@@ -111,18 +111,18 @@ int main ( int argc, char *argv[] ) {
 									required("-p","--prefix") & value("prefix",
 																														 countopt.prefix)
 									% "output file prefix",
-									option("-o","--output-dir") & value("out-dir",
+									option("-o","--output-dir") & value(ensure_dir_exists, "out-dir",
 																											countopt.output_dir) %
 									"directory where output should be written (default = \"./\")",
-									values("files", countopt.filenames) % "list of files to be counted (supported files: fastq and compressed gzip or bzip2 fastq files)"
+									values(ensure_file_exists, "files", countopt.filenames) % "list of files to be counted (supported files: fastq and compressed gzip or bzip2 fastq files)"
 									//option("-h", "--help")      % "show help"
 						 );
 
 	auto query_mode = (
 							command("query").set(selected, mode::query),
-							required("-f", "--squeakr-file") & value("squeakr-file",
+							required("-f", "--squeakr-file") & value(ensure_file_exists, "squeakr-file",
 																									 queryopt.squeakr_file) % "input squeakr file",
-							required("-q","--query-file") & value("query-file",
+							required("-q","--query-file") & value(ensure_file_exists, "query-file",
 																								queryopt.queryfile) % "input query file",
 							required("-o", "--output-file") & value("output-file",
 																									 queryopt.output_file) % "output file"
@@ -131,10 +131,10 @@ int main ( int argc, char *argv[] ) {
 
 	auto inner_prod_mode = (
 							command("inner_prod").set(selected, mode::inner_prod),
-							required("-a", "--squeakr-file-first") & value("squeakr-file-first",
+							required("-a", "--squeakr-file-first") & value(ensure_file_exists, "squeakr-file-first",
 																												 innerprodopt.squeakr_filea)
 							% "first input squeakr file",
-							required("-b", "--squeakr-file-second") & value("squeakr-file-second",
+							required("-b", "--squeakr-file-second") & value(ensure_file_exists, "squeakr-file-second",
 																													innerprodopt.squeakr_fileb)
 							% "second input squeakr file"
 							//option("-h", "--help")  % "show help"
@@ -142,7 +142,7 @@ int main ( int argc, char *argv[] ) {
 
 	auto list_mode = (
 							command("list").set(selected, mode::list),
-							required("-f", "--squeakr-file-file") & value("squeakr-file",
+							required("-f", "--squeakr-file-file") & value(ensure_file_exists, "squeakr-file",
 																									 listopt.squeakr_file) % "input squeakr file",
 							required("-o", "--output-file") & value("output-file",
 																									 listopt.output_file) % "output file"

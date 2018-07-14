@@ -74,9 +74,6 @@ extern "C" {
 #endif
 	} qfblock;
 
-	struct __attribute__ ((__packed__)) qfblock;
-	typedef struct qfblock qfblock;
-
 	enum hashmode {
 		DEFAULT,
 		INVERTIBLE,

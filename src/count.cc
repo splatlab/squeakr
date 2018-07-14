@@ -44,6 +44,7 @@
 
 #include "clipp.h"
 #include "ProgOpts.h"
+#include "SqueakrFS.h"
 #include "gqf_cpp.h"
 #include "chunk.h"
 #include "kmer.h"
@@ -99,7 +100,7 @@ start_read:
 			__int128_t first = 0;
 			__int128_t first_rev = 0;
 			__int128_t item = 0;
-			for(int i = 0; i < obj->ksize; i++) { //First kmer
+			for(uint32_t i = 0; i < obj->ksize; i++) { //First kmer
 				uint8_t curr = Kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
 					if (i + 1 < read.length())
@@ -287,13 +288,25 @@ int count_main(CountOpts &opts)
 		}
 	}
 
-	if (opts.output_dir.back() != '/') {
-		opts.output_dir += '/';
+	std::string output_dir = opts.output_dir;
+	std::string prefix = opts.prefix;
+	// make the output directory if it doesn't exist
+	if (!squeakr::fs::DirExists(output_dir.c_str())) {
+		squeakr::fs::MakeDir(output_dir.c_str());
 	}
-	std::string ds_file =      opts.output_dir + opts.prefix + ser_ext;
-	std::string log_file =     opts.output_dir + opts.prefix + log_ext;
-	std::string cluster_file = opts.output_dir + opts.prefix + cluster_ext;
-	std::string freq_file =    opts.output_dir + opts.prefix + freq_ext;
+	// check to see if the output dir exists now
+	if (!squeakr::fs::DirExists(output_dir.c_str())) {
+		console->error("Output dir {} could not be successfully created.", prefix);
+		exit(1);
+	}
+	if (output_dir.back() != '/') {
+		output_dir += '/';
+	}
+
+	std::string ds_file =      output_dir + prefix + ser_ext;
+	std::string log_file =     output_dir + prefix + log_ext;
+	std::string cluster_file = output_dir + prefix + cluster_ext;
+	std::string freq_file =    output_dir + prefix + freq_ext;
 
 	// A random large prime number.
 	uint32_t seed = 2038074761;
@@ -306,7 +319,7 @@ int count_main(CountOpts &opts)
 
 	for (int i = 0; i < opts.numthreads; i++) {
 		local_cqfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits,
-																	LOCKS_FORBIDDEN, hash, seed);
+																	 LOCKS_FORBIDDEN, hash, seed);
 		flush_object* obj = (flush_object*)malloc(sizeof(flush_object));
 		obj->local_cqf = &local_cqfs[i];
 		obj->main_cqf = &cqf;
@@ -320,9 +333,45 @@ int count_main(CountOpts &opts)
 	console->info("Reading from the fastq file and inserting in the QF.");
 	gettimeofday(&start1, &tzp);
 	prod_threads.join_all();
+
+	if (opts.cutoff > 1) {
+		console->info("Filtering k-mers based on the cutoff");
+		CQF<KeyObject> filtered_cqf(opts.qbits, num_hash_bits, LOCKS_OPTIONAL, hash,
+																seed);
+		uint64_t max_cnt = 0;
+		CQF<KeyObject>::Iterator it = cqf.begin();
+		while (!it.done()) {
+			KeyObject k = *it;
+			if (k.count >= (uint32_t)opts.cutoff)
+				filtered_cqf.insert(k);
+			if (max_cnt < k.count)
+				max_cnt = k.count;
+			++it;
+		}
+		cqf = filtered_cqf;
+	}
+	// serialize the CQF to disk.
 	cqf.serialize(ds_file);
 	gettimeofday(&end1, &tzp);
 	print_time_elapsed("", &start1, &end1, console);
+
+	gettimeofday(&start2, &tzp);
+	uint64_t max_cnt = 0;
+	CQF<KeyObject>::Iterator it = cqf.begin();
+	while (!it.done()) {
+		KeyObject k = *it;
+		if (max_cnt < k.count)
+			max_cnt = k.count;
+		++it;
+	}
+
+	gettimeofday(&end2, &tzp);
+	print_time_elapsed("", &start2, &end2, console);
+
+	console->info("Maximum freq: {}", max_cnt);
+
+	console->info("Num distinct elem: {}", cqf.dist_elts());
+	console->info("Total num elems: {}", cqf.total_elts());
 
 	// seek to the end of the file and write the k-mer size
 	std::ofstream squeakr_file(ds_file, std::ofstream::out |
@@ -331,28 +380,6 @@ int count_main(CountOpts &opts)
 	uint64_t kmer_size = opts.ksize;
 	squeakr_file.write((const char*)&kmer_size, sizeof(kmer_size));
 	squeakr_file.close();
-	
-	console->info("Calc freq distribution.");
-	//ofstream freq_file;
-	//freq_file.open(freq_file.c_str());
-	uint64_t max_cnt = 0;
-	CQF<KeyObject>::Iterator it = cqf.begin();
-	gettimeofday(&start2, &tzp);
-	do {
-		KeyObject k = *it;
-		//freq_file << key << " " << count << std::endl;
-		if (max_cnt < k.count)
-			max_cnt = k.count;
-		++it;
-	} while (!it.done());
-	gettimeofday(&end2, &tzp);
-	print_time_elapsed("", &start2, &end2, console);
-
-	console->info("Maximum freq: {}", max_cnt);
-	//freq_file.close();
-
-	console->info("Num distinct elem: {}", cqf.dist_elts());
-	console->info("Total num elems: {}", cqf.total_elts());
 
 	return 0;
 }

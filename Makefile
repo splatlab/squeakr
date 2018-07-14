@@ -27,11 +27,10 @@ LOC_SRC=src
 OBJDIR=obj
 
 CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE) \
--Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare
+ -Wno-unused-function
 
 CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)\
--Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare \
--Wno-implicit-function-declaration
+ -Wno-unused-function
 
 LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
 -lboost_thread -lm -lbz2 -lz -lrt
@@ -45,6 +44,7 @@ all: $(TARGETS)
 # dependencies between programs and .o files
 squeakr:					$(OBJDIR)/kmer.o $(OBJDIR)/hashutil.o $(OBJDIR)/util.o \
 									$(OBJDIR)/gqf.o $(OBJDIR)/gqf_file.o \
+									$(OBJDIR)/SqueakrFS.o \
 									$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o \
 									$(OBJDIR)/list.o $(OBJDIR)/squeakr.o
 
@@ -53,7 +53,8 @@ squeakr:					$(OBJDIR)/kmer.o $(OBJDIR)/hashutil.o $(OBJDIR)/util.o \
 $(OBJDIR)/squeakr.o:		$(LOC_SRC)/squeakr.cc
 $(OBJDIR)/count.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/chunk.h \
 												$(LOC_INCLUDE)/kmer.h \
-												$(LOC_INCLUDE)/reader.h $(LOC_INCLUDE)/util.h
+												$(LOC_INCLUDE)/reader.h $(LOC_INCLUDE)/util.h \
+												$(LOC_INCLUDE)/SqueakrFS.h
 $(OBJDIR)/query.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
 												$(LOC_INCLUDE)/util.h
 $(OBJDIR)/innerprod.o: 	$(LOC_INCLUDE)/gqf_cpp.h
