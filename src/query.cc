@@ -89,7 +89,7 @@ int query_main(QueryOpts& opts)
 	for (auto it = kmers.begin(); it != kmers.end(); ++it) {
 		uint64_t count = cqf.query(KeyObject(*it, 0, 0));
 		if (count == 0) {
-			std::cout << Kmer::int_to_str(*it, kmer_size) << std::endl;
+			console->error(Kmer::int_to_str(*it, kmer_size));
 			num_not_found++;
 		}
 		else
