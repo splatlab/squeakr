@@ -62,6 +62,7 @@ typedef struct {
 	uint32_t count {0};
 	uint32_t ksize {28};
 	bool exact;
+	std::shared_ptr<spdlog::logger> console{nullptr};
 } flush_object;
 
 /*create a multi-prod multi-cons queue for storing the chunk of fastq file.*/
@@ -69,19 +70,22 @@ boost::lockfree::queue<file_pointer*, boost::lockfree::fixed_sized<true> > ip_fi
 boost::atomic<int> num_files {0};
 
 /* dump the contents of a local QF into the main QF */
-static void dump_local_qf_to_main(flush_object *obj)
+static bool dump_local_qf_to_main(flush_object *obj)
 {
 	CQF<KeyObject>::Iterator it = obj->local_cqf->begin();
 	do {
 		KeyObject k = *it;
-		obj->main_cqf->insert(k);
+		if (!obj->main_cqf->insert(k))
+			return false;
 		++it;
 	} while (!it.done());
 	obj->local_cqf->reset();
+
+	return true;
 }
 
 /* convert a chunk of the fastq file into kmers */
-void reads_to_kmers(chunk &c, flush_object *obj)
+bool reads_to_kmers(chunk &c, flush_object *obj)
 {
 	auto fs = c.get_reads();
 	auto fe = c.get_reads();
@@ -131,7 +135,8 @@ start_read:
 				obj->count++;
 				// check of the load factor of the local QF is more than 50%
 				if (obj->count > 1ULL<<(QBITS_LOCAL_QF-1)) {
-					dump_local_qf_to_main(obj);
+					if (!dump_local_qf_to_main(obj))
+						return false;
 					obj->count = 0;
 				}
 			}
@@ -168,7 +173,8 @@ start_read:
 					obj->count++;
 					// check of the load factor of the local QF is more than 50%
 					if (obj->count > 1ULL<<(QBITS_LOCAL_QF-1)) {
-						dump_local_qf_to_main(obj);
+						if (!dump_local_qf_to_main(obj))
+							return false;
 						obj->count = 0;
 					}
 				}
@@ -186,6 +192,8 @@ next_read:
 		fs++; // increment the pointer
 	}
 	free(c.get_reads());
+
+	return true;
 }
 
 /* read a part of the fastq file, parse it, convert the reads to kmers, and
@@ -200,7 +208,10 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 			if (reader::fastq_read_parts(fp->mode, fp)) {
 				ip_files.push(fp);
 				chunk c(fp->part, fp->size);
-				reads_to_kmers(c, obj);
+				if (!reads_to_kmers(c, obj)) {
+					obj->console->error("Insertion in the CQF failed.");
+					abort();
+				}
 			} else {
 				/* close the file */
 				if (fp->mode == 0)
@@ -219,7 +230,10 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 		}
 	}
 	if (obj->count) {
-		dump_local_qf_to_main(obj);
+		if (!dump_local_qf_to_main(obj)) {
+			obj->console->error("Insertion in the CQF failed.");
+			abort();
+		}
 		obj->count = 0;
 	}
 
@@ -326,6 +340,7 @@ int count_main(CountOpts &opts)
 		obj->ksize = opts.ksize;
 		obj->exact = opts.exact;
 		obj->count = 0;
+		obj->console = console;
 		prod_threads.add_thread(new boost::thread(fastq_to_uint64kmers_prod,
 																							obj));
 	}
@@ -343,7 +358,8 @@ int count_main(CountOpts &opts)
 		while (!it.done()) {
 			KeyObject k = *it;
 			if (k.count >= (uint32_t)opts.cutoff)
-				filtered_cqf.insert(k);
+				if (!filtered_cqf.insert(k))
+					console->error("Insertion in the CQF failed.");
 			if (max_cnt < k.count)
 				max_cnt = k.count;
 			++it;
