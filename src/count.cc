@@ -62,7 +62,7 @@ typedef struct {
 	uint32_t count {0};
 	uint32_t ksize {28};
 	bool exact;
-	std::shared_ptr<spdlog::logger> console{nullptr};
+	spdlog::logger* console{nullptr};
 } flush_object;
 
 /*create a multi-prod multi-cons queue for storing the chunk of fastq file.*/
@@ -75,8 +75,11 @@ static bool dump_local_qf_to_main(flush_object *obj)
 	CQF<KeyObject>::Iterator it = obj->local_cqf->begin();
 	do {
 		KeyObject k = *it;
-		if (!obj->main_cqf->insert(k))
+		int ret = obj->main_cqf->insert(k, WAIT_FOR_LOCK);
+		if (ret == -1) {
+			obj->console->error("The CQF is full. Please rerun the with a larger size.");
 			return false;
+		}
 		++it;
 	} while (!it.done());
 	obj->local_cqf->reset();
@@ -130,8 +133,12 @@ start_read:
 			 * insert the item in the local QF.
 			 */
 			KeyObject k(item, 0, 1);
-			if (!obj->main_cqf->insert(k)) {
-				obj->local_cqf->insert(k);
+			int ret = obj->main_cqf->insert(k, TRY_ONCE_LOCK);
+			if (ret == -1) {
+				obj->console->error("The CQF is full. Please rerun the with a larger size.");
+				exit(1);
+			} else if (ret == -2) {
+				obj->local_cqf->insert(k, NO_LOCK);
 				obj->count++;
 				// check of the load factor of the local QF is more than 50%
 				if (obj->count > 1ULL<<(QBITS_LOCAL_QF-1)) {
@@ -168,8 +175,12 @@ start_read:
 				 * insert the item in the local QF.
 				 */
 				KeyObject k(item, 0, 1);
-				if (!obj->main_cqf->insert(k)) {
-					obj->local_cqf->insert(k);
+				ret = obj->main_cqf->insert(k, TRY_ONCE_LOCK);
+				if (ret == -1) {
+					obj->console->error("The CQF is full. Please rerun the with a larger size.");
+					exit(1);
+				} else if (ret == -2) {
+					obj->local_cqf->insert(k, NO_LOCK);
 					obj->count++;
 					// check of the load factor of the local QF is more than 50%
 					if (obj->count > 1ULL<<(QBITS_LOCAL_QF-1)) {
@@ -258,7 +269,7 @@ int count_main(CountOpts &opts)
 	if (opts.numthreads == 0)
 		opts.numthreads = std::thread::hardware_concurrency();
 
-	enum hashmode hash = DEFAULT;
+	enum qf_hashmode hash = DEFAULT;
 	int num_hash_bits = opts.qbits+8;	// we use 8 bits for remainders in the main QF
 	if (opts.exact) {
 		num_hash_bits = 2*opts.ksize; // Each base 2 bits.
@@ -322,18 +333,15 @@ int count_main(CountOpts &opts)
 	std::string cluster_file = output_dir + prefix + cluster_ext;
 	std::string freq_file =    output_dir + prefix + freq_ext;
 
-	// A random large prime number.
-	uint32_t seed = 2038074761;
 	//Initialize the main  QF
-	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, LOCKS_OPTIONAL, hash, seed);
+	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, hash, SEED);
 	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
 																											 sizeof(CQF<KeyObject>));
 
 	boost::thread_group prod_threads;
 
 	for (int i = 0; i < opts.numthreads; i++) {
-		local_cqfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits,
-																	 LOCKS_FORBIDDEN, hash, seed);
+		local_cqfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits, hash, SEED);
 		flush_object* obj = (flush_object*)malloc(sizeof(flush_object));
 		obj->local_cqf = &local_cqfs[i];
 		obj->main_cqf = &cqf;
@@ -351,15 +359,18 @@ int count_main(CountOpts &opts)
 
 	if (opts.cutoff > 1) {
 		console->info("Filtering k-mers based on the cutoff");
-		CQF<KeyObject> filtered_cqf(opts.qbits, num_hash_bits, LOCKS_OPTIONAL, hash,
-																seed);
+		CQF<KeyObject> filtered_cqf(opts.qbits, num_hash_bits, hash, SEED);
 		uint64_t max_cnt = 0;
 		CQF<KeyObject>::Iterator it = cqf.begin();
 		while (!it.done()) {
 			KeyObject k = *it;
-			if (k.count >= (uint32_t)opts.cutoff)
-				if (!filtered_cqf.insert(k))
-					console->error("Insertion in the CQF failed.");
+			if (k.count >= (uint32_t)opts.cutoff) {
+				int ret = filtered_cqf.insert(k, NO_LOCK);
+				if (ret == -1) {
+					console->error("The CQF is full. Please rerun the with a larger size.");
+					exit(1);
+				}
+			}
 			if (max_cnt < k.count)
 				max_cnt = k.count;
 			++it;

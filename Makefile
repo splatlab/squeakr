@@ -26,11 +26,9 @@ LOC_INCLUDE=include
 LOC_SRC=src
 OBJDIR=obj
 
-CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE) \
- -Wno-unused-function
+CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
 
-CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)\
- -Wno-unused-function
+CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
 
 LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
 -lboost_thread -lm -lbz2 -lz -lrt

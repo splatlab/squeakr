@@ -54,8 +54,8 @@ int inner_prod_main(InnerProdOpts& opts)
 
 	//Initialize the QF
 	console->info("Mmaping Squeakr files from disk.");
-	CQF<KeyObject> cfa(opts.squeakr_filea, LOCKS_FORBIDDEN, FREAD);
-	CQF<KeyObject> cfb(opts.squeakr_fileb, LOCKS_FORBIDDEN, FREAD);
+	CQF<KeyObject> cfa(opts.squeakr_filea, FREAD);
+	CQF<KeyObject> cfb(opts.squeakr_fileb, FREAD);
 
 	if (cfa.seed() != cfb.seed()) {
 		console->error("Input CQFs do not have the same seed.");
