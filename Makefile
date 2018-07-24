@@ -86,5 +86,5 @@ $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(OBJDIR)/*.o core $(TARGETS)
+	rm -rf $(OBJDIR) core $(TARGETS)
 
