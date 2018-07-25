@@ -61,6 +61,9 @@ class CQF {
 		}
 
 		void set_auto_resize(void) { qf_set_auto_resize(&cqf); }
+		int64_t get_unique_index(const key_obj& k) const {
+			return qf_get_unique_index(&cqf, k.key, k.value);
+		}
 
 		bool is_exact(void);
 
@@ -83,6 +86,8 @@ class CQF {
 				key_obj operator*(void) const;
 				void operator++(void);
 				bool done(void) const;
+
+				key_obj get_cur_hash(void) const;
 
 				QFi iter;
 			private:
@@ -180,7 +185,14 @@ CQF<key_obj>::Iterator::Iterator(QFi it)
 template <class key_obj>
 key_obj CQF<key_obj>::Iterator::operator*(void) const {
 	uint64_t key = 0, value = 0, count = 0;
-	qfi_get(&iter, &key, &value, &count);
+	qfi_get_key(&iter, &key, &value, &count);
+	return key_obj(key, value, count);
+}
+
+template <class key_obj>
+key_obj CQF<key_obj>::Iterator::get_cur_hash(void) const {
+	uint64_t key = 0, value = 0, count = 0;
+	qfi_get_hash(&iter, &key, &value, &count);
 	return key_obj(key, value, count);
 }
 

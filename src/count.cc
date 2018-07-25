@@ -74,7 +74,7 @@ static bool dump_local_qf_to_main(flush_object *obj)
 {
 	CQF<KeyObject>::Iterator it = obj->local_cqf->begin();
 	do {
-		KeyObject k = *it;
+		KeyObject k = it.get_cur_hash();
 		int ret = obj->main_cqf->insert(k, WAIT_FOR_LOCK);
 		if (ret == -1) {
 			obj->console->error("The CQF is full. Please rerun the with a larger size.");
@@ -287,12 +287,11 @@ int count_main(CountOpts &opts)
 	std::string filepath(opts.filenames.front());
 	auto const pos = filepath.find_last_of('.');
 	std::string input_ext = filepath.substr(pos + 1);
-	if (input_ext.compare(std::string("fastq")) == 0 ||
-			input_ext.compare(std::string("fq")))
+	if (input_ext == std::string("fastq") || input_ext == std::string("fq"))
 		mode = 0;
-	else if (input_ext.compare(std::string("gz")))
+	else if (input_ext == std::string("gz"))
 		mode = 1;
-	else if (input_ext.compare(std::string("bz2")))
+	else if (input_ext == std::string("bz2"))
 		mode = 2;
 	else {
 		console->error("Does not support this input file type.");
@@ -353,17 +352,35 @@ int count_main(CountOpts &opts)
 																							obj));
 	}
 
-	console->info("Reading from the fastq file and inserting in the QF.");
+	console->info("Reading from the fastq file and inserting in the CQF.");
 	gettimeofday(&start1, &tzp);
 	prod_threads.join_all();
 
 	if (opts.cutoff > 1) {
-		console->info("Filtering k-mers based on the cutoff");
-		CQF<KeyObject> filtered_cqf(opts.qbits, num_hash_bits, hash, SEED);
-		uint64_t max_cnt = 0;
+		console->info("Filtering k-mers based on the cutoff.");
+		uint64_t num_kmers{0}, estimated_size{0}, log_estimated_size{0};
 		CQF<KeyObject>::Iterator it = cqf.begin();
 		while (!it.done()) {
-			KeyObject k = *it;
+			KeyObject k_key = *it;
+			KeyObject k_hash = it.get_cur_hash();
+			if (k_key.count >= (uint32_t)opts.cutoff)
+				num_kmers++;
+			//console->info("hash fraction: {}", k.key / (float)cqf.range());
+			if (cqf.get_unique_index(k_key) / (float)(1ULL << opts.qbits) > 0.05) {
+				estimated_size = num_kmers * (cqf.range() / k_hash.key);
+				estimated_size *= 3;    // to account for counts.
+				log_estimated_size = ceil(log2(estimated_size));
+				break;
+			}
+			++it;
+		}
+		console->info("Estimated size of the final CQF: {}", log_estimated_size);
+		CQF<KeyObject> filtered_cqf(log_estimated_size, num_hash_bits, hash, SEED);
+		filtered_cqf.set_auto_resize();
+		it = cqf.begin();
+		uint64_t max_cnt = 0;
+		while (!it.done()) {
+			KeyObject k = it.get_cur_hash();
 			if (k.count >= (uint32_t)opts.cutoff) {
 				int ret = filtered_cqf.insert(k, NO_LOCK);
 				if (ret == -1) {
@@ -382,11 +399,12 @@ int count_main(CountOpts &opts)
 	gettimeofday(&end1, &tzp);
 	print_time_elapsed("", &start1, &end1, console);
 
+	console->info("Calculating frequency distribution:");
 	gettimeofday(&start2, &tzp);
 	uint64_t max_cnt = 0;
 	CQF<KeyObject>::Iterator it = cqf.begin();
 	while (!it.done()) {
-		KeyObject k = *it;
+		KeyObject k = it.get_cur_hash();
 		if (max_cnt < k.count)
 			max_cnt = k.count;
 		++it;
