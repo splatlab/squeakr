@@ -74,8 +74,8 @@ static bool dump_local_qf_to_main(flush_object *obj)
 {
 	CQF<KeyObject>::Iterator it = obj->local_cqf->begin();
 	do {
-		KeyObject k = it.get_cur_hash();
-		int ret = obj->main_cqf->insert(k, WAIT_FOR_LOCK);
+		KeyObject hash = it.get_cur_hash();
+		int ret = obj->main_cqf->insert(hash, WAIT_FOR_LOCK | KEY_IS_HASH);
 		if (ret == -1) {
 			obj->console->error("The CQF is full. Please rerun the with a larger size.");
 			return false;
@@ -361,35 +361,48 @@ int count_main(CountOpts &opts)
 		uint64_t num_kmers{0}, estimated_size{0}, log_estimated_size{0};
 		CQF<KeyObject>::Iterator it = cqf.begin();
 		while (!it.done()) {
-			KeyObject k_key = *it;
-			KeyObject k_hash = it.get_cur_hash();
-			if (k_key.count >= (uint32_t)opts.cutoff)
+			KeyObject hash = it.get_cur_hash();
+			if (hash.count >= (uint32_t)opts.cutoff)
 				num_kmers++;
 			//console->info("hash fraction: {}", k.key / (float)cqf.range());
-			if (cqf.get_unique_index(k_key) / (float)(1ULL << opts.qbits) > 0.05) {
-				estimated_size = num_kmers * (cqf.range() / k_hash.key);
-				estimated_size *= 3;    // to account for counts.
+			if (cqf.get_unique_index(hash, KEY_IS_HASH) / (float)(1ULL <<
+																														opts.qbits) >
+					0.05) {
+				estimated_size = num_kmers * (cqf.range() / hash.key);
+				//console->info("estimated size: {}", estimated_size);
+				if (!opts.no_counts)
+					estimated_size *= 3;    // to account for counts.
 				log_estimated_size = ceil(log2(estimated_size));
+				uint64_t total_slots = 1ULL << log_estimated_size;
+				//console->info("estimated size after ceiling: {}", 1ULL << log_estimated_size);
+				if ((total_slots-estimated_size)/(float)estimated_size < 0.1)
+					log_estimated_size += 1;
+				//console->info("estimated size after ceiling: {}", 1ULL << log_estimated_size);
 				break;
 			}
 			++it;
 		}
 		console->info("Estimated size of the final CQF: {}", log_estimated_size);
 		CQF<KeyObject> filtered_cqf(log_estimated_size, num_hash_bits, hash, SEED);
-		filtered_cqf.set_auto_resize();
 		it = cqf.begin();
 		uint64_t max_cnt = 0;
 		while (!it.done()) {
-			KeyObject k = it.get_cur_hash();
-			if (k.count >= (uint32_t)opts.cutoff) {
-				int ret = filtered_cqf.insert(k, NO_LOCK);
+			KeyObject hash = it.get_cur_hash();
+			if (hash.count >= (uint32_t)opts.cutoff) {
+				int ret;
+				if (!opts.no_counts)
+					ret = filtered_cqf.insert(hash, NO_LOCK | KEY_IS_HASH);
+				else {
+					hash.count = 1;
+					ret = filtered_cqf.insert(hash, NO_LOCK | KEY_IS_HASH);
+				}
 				if (ret == -1) {
-					console->error("The CQF is full. Please rerun the with a larger size.");
+					console->error("The CQF is full. Estimated size of the final CQF is wrong.");
 					exit(1);
 				}
 			}
-			if (max_cnt < k.count)
-				max_cnt = k.count;
+			if (max_cnt < hash.count)
+				max_cnt = hash.count;
 			++it;
 		}
 		cqf = filtered_cqf;
@@ -404,9 +417,9 @@ int count_main(CountOpts &opts)
 	uint64_t max_cnt = 0;
 	CQF<KeyObject>::Iterator it = cqf.begin();
 	while (!it.done()) {
-		KeyObject k = it.get_cur_hash();
-		if (max_cnt < k.count)
-			max_cnt = k.count;
+		KeyObject hash = it.get_cur_hash();
+		if (max_cnt < hash.count)
+			max_cnt = hash.count;
 		++it;
 	}
 

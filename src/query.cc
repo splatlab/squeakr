@@ -87,7 +87,7 @@ int query_main(QueryOpts& opts)
 	uint64_t num_not_found = 0;
 	gettimeofday(&start, &tzp);
 	for (auto it = kmers.begin(); it != kmers.end(); ++it) {
-		uint64_t count = cqf.query(KeyObject(*it, 0, 0));
+		uint64_t count = cqf.query(KeyObject(*it, 0, 0), 0);
 		if (count == 0) {
 			console->error(Kmer::int_to_str(*it, kmer_size));
 			num_not_found++;

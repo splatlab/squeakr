@@ -103,6 +103,8 @@ int main ( int argc, char *argv[] ) {
 									"length of k-mers to count",
 									option("-c","--cutoff") & value("cutoff", countopt.cutoff) %
 									"only output k-mers with count greater than or equal to cutoff (default = 1)",
+									option("-nc","--no-counts").set(countopt.no_counts, 1) %
+									"only output k-mers and no counts after the filtering phase (default = false)",
 									required("-s","--log-slots") & value("log-slots",
 																											 countopt.qbits) % "log of number of slots in the CQF",
 									option("-t","--threads") & value("num-threads",

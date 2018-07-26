@@ -9,6 +9,7 @@ class CountOpts {
 		int exact {0};
 		int ksize;
 		int cutoff {1};
+		int no_counts{0};
 		int qbits {0};
 		int numthreads{0};
 		std::string prefix;

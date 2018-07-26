@@ -49,10 +49,10 @@ class CQF {
 		CQF(std::string& filename, enum readmode flag);
 		CQF(const CQF<key_obj>& copy_cqf);
 
-		bool insert(const key_obj& k, enum qf_runtimelockingmode lock);
+		int insert(const key_obj& k, uint8_t flags);
 
 		/* Will return the count. */
-		uint64_t query(const key_obj& k);
+		uint64_t query(const key_obj& k, uint8_t flags);
 
 		uint64_t inner_prod(const CQF<key_obj>& in_cqf);
 
@@ -61,8 +61,8 @@ class CQF {
 		}
 
 		void set_auto_resize(void) { qf_set_auto_resize(&cqf); }
-		int64_t get_unique_index(const key_obj& k) const {
-			return qf_get_unique_index(&cqf, k.key, k.value);
+		int64_t get_unique_index(const key_obj& k, uint8_t flags) const {
+			return qf_get_unique_index(&cqf, k.key, k.value, flags);
 		}
 
 		bool is_exact(void);
@@ -155,15 +155,15 @@ template <class key_obj> CQF<key_obj>::CQF(const CQF<key_obj>& copy_cqf) {
 }
 
 template <class key_obj>
-bool CQF<key_obj>::insert(const key_obj& k, enum qf_runtimelockingmode lock) {
-	return qf_insert(&cqf, k.key, k.value, k.count, lock);
+int CQF<key_obj>::insert(const key_obj& k, uint8_t flags) {
+	return qf_insert(&cqf, k.key, k.value, k.count, flags);
 	// To validate the CQF
 	//set.insert(k.key);
 }
 
 template <class key_obj>
-uint64_t CQF<key_obj>::query(const key_obj& k) {
-	return qf_count_key_value(&cqf, k.key, k.value);
+uint64_t CQF<key_obj>::query(const key_obj& k, uint8_t flags) {
+	return qf_count_key_value(&cqf, k.key, k.value, flags);
 }
 
 template <class key_obj>
