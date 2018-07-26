@@ -45,6 +45,7 @@
 #include "clipp.h"
 #include "ProgOpts.h"
 #include "SqueakrFS.h"
+#include "squeakrconfig.h"
 #include "gqf_cpp.h"
 #include "chunk.h"
 #include "kmer.h"
@@ -435,8 +436,9 @@ int count_main(CountOpts &opts)
 	std::ofstream squeakr_file(ds_file, std::ofstream::out |
 														 std::ofstream::app | std::ofstream::binary);
 	squeakr_file.seekp(0, squeakr_file.end);
-	uint64_t kmer_size = opts.ksize;
-	squeakr_file.write((const char*)&kmer_size, sizeof(kmer_size));
+	squeakrconfig config;
+	config.kmer_size = opts.ksize;
+	squeakr_file.write((const char*)&config, sizeof(config));
 	squeakr_file.close();
 
 	return 0;

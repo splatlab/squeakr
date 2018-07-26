@@ -1,6 +1,5 @@
 //
-// Mantis : An efficient large-scale sequence search index
-// Copyright (C) 2017 Prahsant Pandey, Fatemeh Almodaresi, Michael Bender, Michael Ferdman,
+// Copyright (C) 2017 Prahsant Pandey, Michael Bender,
 // Rob Johnson, Rob Patro
 //
 // This file is part of Squeakr.

@@ -42,12 +42,13 @@
 #include "ProgOpts.h"
 #include "gqf_cpp.h"
 #include "kmer.h"
+#include "squeakrconfig.h"
 
 /*
- * ===  FUNCTION  ======================================================================
+ * ===  FUNCTION  =============================================================
  *         Name:  main
  *  Description:  
- * =====================================================================================
+ * ============================================================================
  */
 int query_main(QueryOpts& opts)
 {
@@ -66,19 +67,24 @@ int query_main(QueryOpts& opts)
 	std::ifstream squeakr_file(opts.squeakr_file, std::ofstream::in);
 	squeakr_file.seekg(0, squeakr_file.end);
 	uint64_t file_size = squeakr_file.tellg();
-	uint64_t kmer_size;
-	squeakr_file.seekg(file_size - sizeof(kmer_size));
-	squeakr_file.read((char*)&kmer_size, sizeof(kmer_size));
+	squeakrconfig config;
+	squeakr_file.seekg(file_size - sizeof(squeakrconfig));
+	squeakr_file.read((char*)&config, sizeof(config));
 	squeakr_file.close();
-	console->info("kmer size: {}", kmer_size);
+	if (config.version != VERSION) {
+		console->error("Squeakr index version is invalid. Expected: {} Available: {}",
+									 VERSION, config.version);
+		exit(1);
+	}
+	console->info("kmer size: {}, version: {}", config.kmer_size, config.version);
 
-	if (cqf.is_exact() && kmer_size*2 != cqf.keybits()) {
+	if (cqf.is_exact() && config.kmer_size*2 != cqf.keybits()) {
 		console->error("K-mer size is not correct.");
 		return 1;
 	}
 
-	console->info("Parsing query file for {}-mers.", kmer_size);
-	Kmer::parse_kmers(opts.queryfile.c_str(), kmer_size, kmers);
+	console->info("Parsing query file for {}-mers.", config.kmer_size);
+	Kmer::parse_kmers(opts.queryfile.c_str(), config.kmer_size, kmers);
 	console->info("Found {} k-mers", kmers.size());
 
 	std::ofstream opfile(opts.output_file.c_str(), std::ofstream::out);
@@ -89,11 +95,11 @@ int query_main(QueryOpts& opts)
 	for (auto it = kmers.begin(); it != kmers.end(); ++it) {
 		uint64_t count = cqf.query(KeyObject(*it, 0, 0), 0);
 		if (count == 0) {
-			console->error(Kmer::int_to_str(*it, kmer_size));
+			console->error(Kmer::int_to_str(*it, config.kmer_size));
 			num_not_found++;
 		}
 		else
-			opfile << Kmer::int_to_str(*it, kmer_size) << "\t" << count << std::endl;
+			opfile << Kmer::int_to_str(*it, config.kmer_size) << "\t" << count << std::endl;
 	}
 	gettimeofday(&end, &tzp);
 	opfile.close();
