@@ -1,0 +1,38 @@
+count:
+	- kill -p
+	- change -o to output file
+	- make -o required
+	- add argument:
+	  <-e | -p num_hash_bits>
+	
+query:
+	- make -o optional (default to stdout)
+	- make -q optional (default to stdin)
+
+inner_prod:
+	- remove -a -b
+
+list:
+	- make -o optional (default to stdout)
+	- add a cutoff parameter
+
+new command: merge
+   merge <-e | -p num_hash_bits> [-c cutoff] [-n] -o <output.squeakr> <infile1.squeakr> ...
+
+new command: filter
+(same as merge, but only one input -- internally just runs merge)
+
+new command: info
+   info <input.squeakr>
+- outputs:
+	- kmer size
+	- version
+	- exactness or num hash bits
+	- number of kmers
+	- number of distinct kmers
+	- cutoff
+	- whether counts are present
+	- etc?
+
+make squeakrconfig packed
+

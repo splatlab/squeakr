@@ -25,6 +25,9 @@
 
 typedef struct squeakrconfig {
 	uint64_t kmer_size;
+	uint64_t cutoff;
+	uint64_t contains_counts;
+	uint64_t endianness{0x0102030405060708ULL};
 	uint32_t version{VERSION};
 } squeakrconfig;
 
