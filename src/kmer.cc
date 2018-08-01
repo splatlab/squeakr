@@ -1,3 +1,13 @@
+/*
+ * ============================================================================
+ *
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
+ *
+ * ============================================================================
+ */
+
 #include <fstream>
 #include "kmer.h"
 

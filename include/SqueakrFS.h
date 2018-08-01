@@ -13,6 +13,7 @@
 
 namespace squeakr {
 	namespace fs {
+		std::string GetDir(std::string str);
 		// Taken from
 		// http://stackoverflow.com/questions/12774207/fastest-way-to-check-if-a-file-exist-using-standard-c-c11-c
 		bool FileExists(const char* path);

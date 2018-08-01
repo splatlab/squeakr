@@ -1,19 +1,11 @@
 /*
- * =====================================================================================
+ * ============================================================================
  *
- *       Filename:  squeakr.cc
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
  *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  05/10/2018 01:58:17 PM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Prashant Pandey (), ppandey@cs.stonybrook.edu
- *   Organization:  Stony Brook University
- *
- * =====================================================================================
+ * ============================================================================
  */
 
 #include <iostream>
@@ -86,10 +78,11 @@ int main ( int argc, char *argv[] ) {
     return true;
   };
 
-  auto ensure_dir_exists = [](const std::string& s) -> bool {
-    bool exists = squeakr::fs::DirExists(s.c_str());
+  auto ensure_parent_dir_exists = [](const std::string& s) -> bool {
+		std::string parent_dir = squeakr::fs::GetDir(s);
+    bool exists = squeakr::fs::DirExists(parent_dir.c_str());
     if (!exists) {
-      std::string e = "The required input directory " + s + " does not seem to exist.";
+      std::string e = "The required input directory " + parent_dir + " does not seem to exist.";
       throw std::runtime_error{e};
     }
     return true;
@@ -103,19 +96,17 @@ int main ( int argc, char *argv[] ) {
 									"length of k-mers to count",
 									option("-c","--cutoff") & value("cutoff", countopt.cutoff) %
 									"only output k-mers with count greater than or equal to cutoff (default = 1)",
-									option("-nc","--no-counts").set(countopt.no_counts, 1) %
-									"only output k-mers and no counts after the filtering phase (default = false)",
+									option("-n","--no-counts").set(countopt.contains_counts, 0) %
+									"only output k-mers and no counts (default = false)",
 									required("-s","--log-slots") & value("log-slots",
 																											 countopt.qbits) % "log of number of slots in the CQF",
 									option("-t","--threads") & value("num-threads",
 																										 countopt.numthreads) %
 									"number of threads to use to count (default = number of hardware threads)",
-									required("-p","--prefix") & value("prefix",
-																														 countopt.prefix)
-									% "output file prefix",
-									option("-o","--output-dir") & value(ensure_dir_exists, "out-dir",
-																											countopt.output_dir) %
-									"directory where output should be written (default = \"./\")",
+									required("-o","--output-file") &
+									value(ensure_parent_dir_exists, "out-file",
+												countopt.output_file) %
+									"file in which output should be written",
 									values(ensure_file_exists, "files", countopt.filenames) % "list of files to be counted (supported files: fastq and compressed gzip or bzip2 fastq files)"
 									//option("-h", "--help")      % "show help"
 						 );
@@ -126,17 +117,18 @@ int main ( int argc, char *argv[] ) {
 																									 queryopt.squeakr_file) % "input squeakr file",
 							required("-q","--query-file") & value(ensure_file_exists, "query-file",
 																								queryopt.queryfile) % "input query file",
-							required("-o", "--output-file") & value("output-file",
-																									 queryopt.output_file) % "output file"
+							required("-o", "--output-file") &
+							value(ensure_parent_dir_exists, "output-file",
+										queryopt.output_file) % "output file"
 							//option("-h", "--help")  % "show help"
 						 );
 
 	auto inner_prod_mode = (
 							command("inner_prod").set(selected, mode::inner_prod),
-							required("-a", "--squeakr-file-first") & value(ensure_file_exists, "squeakr-file-first",
+							value(ensure_file_exists, "first-input",
 																												 innerprodopt.squeakr_filea)
 							% "first input squeakr file",
-							required("-b", "--squeakr-file-second") & value(ensure_file_exists, "squeakr-file-second",
+							value(ensure_file_exists, "second-input",
 																													innerprodopt.squeakr_fileb)
 							% "second input squeakr file"
 							//option("-h", "--help")  % "show help"
@@ -146,8 +138,9 @@ int main ( int argc, char *argv[] ) {
 							command("list").set(selected, mode::list),
 							required("-f", "--squeakr-file-file") & value(ensure_file_exists, "squeakr-file",
 																									 listopt.squeakr_file) % "input squeakr file",
-							required("-o", "--output-file") & value("output-file",
-																									 listopt.output_file) % "output file"
+							required("-o", "--output-file") &
+							value(ensure_parent_dir_exists, "output-file",
+										listopt.output_file) % "output file"
 							//option("-h", "--help")  % "show help"
 							);
 

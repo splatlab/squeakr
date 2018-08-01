@@ -1,7 +1,7 @@
 count:
-	- kill -p
-	- change -o to output file
-	- make -o required
+	- kill -p [DONE]
+	- change -o to output file [DONE]
+	- make -o required [DONE]
 	- add argument:
 	  <-e | -p num_hash_bits>
 	
@@ -10,7 +10,7 @@ query:
 	- make -q optional (default to stdin)
 
 inner_prod:
-	- remove -a -b
+	- remove -a -b [DONE]
 
 list:
 	- make -o optional (default to stdout)
@@ -34,5 +34,5 @@ new command: info
 	- whether counts are present
 	- etc?
 
-make squeakrconfig packed
+make squeakrconfig packed [DONE]
 

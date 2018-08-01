@@ -1,17 +1,9 @@
 /*
  * ============================================================================
  *
- *       Filename:  cqf.h
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  2017-10-26 11:50:04 AM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Prashant Pandey (), ppandey@cs.stonybrook.edu
- *   Organization:  Stony Brook University
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
  *
  * ============================================================================
  */
@@ -60,7 +52,7 @@ class CQF {
 			qf_serialize(&cqf, filename.c_str());
 		}
 
-		void set_auto_resize(void) { qf_set_auto_resize(&cqf); }
+		void set_auto_resize(void) { qf_set_auto_resize(&cqf, true); }
 		int64_t get_unique_index(const key_obj& k, uint8_t flags) const {
 			return qf_get_unique_index(&cqf, k.key, k.value, flags);
 		}
@@ -120,7 +112,8 @@ class KeyObject {
 
 template <class key_obj>
 CQF<key_obj>::CQF() {
-	if (!qf_malloc(&cqf, 1ULL << NUM_Q_BITS, NUM_HASH_BITS, 0, DEFAULT, SEED)) {
+	if (!qf_malloc(&cqf, 1ULL << NUM_Q_BITS, NUM_HASH_BITS, 0, QF_HASH_DEFAULT,
+								 SEED)) {
 		ERROR("Can't allocate the CQF");
 		exit(EXIT_FAILURE);
 	}
@@ -173,7 +166,7 @@ uint64_t CQF<key_obj>::inner_prod(const CQF<key_obj>& in_cqf) {
 
 template <class key_obj>
 bool CQF<key_obj>::is_exact(void) {
-	if (cqf.metadata->hash_mode == INVERTIBLE)
+	if (cqf.metadata->hash_mode == QF_HASH_INVERTIBLE)
 		return true;
 	return false;
 }
@@ -212,14 +205,14 @@ bool CQF<key_obj>::Iterator::done(void) const {
 template<class key_obj>
 typename CQF<key_obj>::Iterator CQF<key_obj>::begin(void) const {
 	QFi qfi;
-	qf_iterator(&this->cqf, &qfi, 0);
+	qf_iterator_from_position(&this->cqf, &qfi, 0);
 	return Iterator(qfi);
 }
 
 template<class key_obj>
 typename CQF<key_obj>::Iterator CQF<key_obj>::end(void) const {
 	QFi qfi;
-	qf_iterator(&this->cqf, &qfi, 0xffffffffffffffff);
+	qf_iterator_from_position(&this->cqf, &qfi, 0xffffffffffffffff);
 	return Iterator(qfi, UINT64_MAX);
 }
 

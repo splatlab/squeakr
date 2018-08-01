@@ -1,19 +1,11 @@
 /*
- * =====================================================================================
+ * ============================================================================
  *
- *       Filename:  util.h
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
  *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  05/10/2018 01:20:47 PM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Prashant Pandey (), ppandey@cs.stonybrook.edu
- *   Organization:  Stony Brook University
- *
- * =====================================================================================
+ * ============================================================================
  */
 
 #ifndef _UTIL_H_

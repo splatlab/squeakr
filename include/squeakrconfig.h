@@ -1,19 +1,11 @@
 /*
- * =====================================================================================
+ * ============================================================================
  *
- *       Filename:  squeakrconfig.h
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
  *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  07/25/2018 05:59:14 PM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Prashant Pandey (), ppandey@cs.stonybrook.edu
- *   Organization:  Stony Brook University
- *
- * =====================================================================================
+ * ============================================================================
  */
 
 #ifndef _SQUEAKR_CONFIG_H_
@@ -23,7 +15,7 @@
 
 #define VERSION 2
 
-typedef struct squeakrconfig {
+typedef struct __attribute__ ((__packed__)) squeakrconfig {
 	uint64_t kmer_size;
 	uint64_t cutoff;
 	uint64_t contains_counts;

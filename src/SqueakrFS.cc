@@ -1,3 +1,13 @@
+/*
+ * ============================================================================
+ *
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
+ *
+ * ============================================================================
+ */
+
 #include "SqueakrFS.h"
 #include <sys/stat.h>
 #include <iostream>
@@ -11,6 +21,11 @@ namespace squeakr {
 		{
 			return (s.size() >= suffix.size()) && equal(suffix.rbegin(),
 																									suffix.rend(), s.rbegin());
+		}
+
+		std::string GetDir(std::string str) {
+			uint64_t found = str.find_last_of('/');
+			return str.substr(0, found);
 		}
 
 		// Taken from
@@ -43,7 +58,7 @@ namespace squeakr {
 
 		std::vector<std::string> GetFilesExt(const char *dir, const char *ext) {
 			DIR *folder = opendir(dir);
-			
+
 			if (!folder) {
 				std::cerr << "Directory doesn't exist " << dir << std::endl;
 				exit(1);

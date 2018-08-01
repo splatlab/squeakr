@@ -1,3 +1,13 @@
+/*
+ * ============================================================================
+ *
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
+ *
+ * ============================================================================
+ */
+
 #ifndef __PROG_OPTS__
 #define __PROG_OPTS__
 
@@ -9,11 +19,10 @@ class CountOpts {
 		int exact {0};
 		int ksize;
 		int cutoff {1};
-		int no_counts{0};
+		int contains_counts{1};
 		int qbits {0};
 		int numthreads{0};
-		std::string prefix;
-		std::string output_dir;
+		std::string output_file;
 		std::vector<std::string> filenames;
 		std::shared_ptr<spdlog::logger> console{nullptr};
 };

@@ -1,20 +1,13 @@
 /*
- * =====================================================================================
+ * ============================================================================
  *
- *       Filename:  kmer_query.cc
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
  *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  04/27/2016 08:48:26 AM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Prashant Pandey (), ppandey@cs.stonybrook.edu
- *   Organization:  Stony Brook University
- *
- * =====================================================================================
+ * ============================================================================
  */
+
 #include <iostream>
 #include <algorithm>
 #include <cstring>

@@ -1,19 +1,9 @@
 /*
  * ============================================================================
  *
- *       Filename:  main.cc
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  05/06/2016 09:56:26 PM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Prashant Pandey (ppandey@cs.stonybrook.edu)
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
  *                  Rob Patro (rob.patro@cs.stonybrook.edu)
- *                  Rob Johnson (rob@cs.stonybrook.edu)
- *   Organization:  Stony Brook University
  *
  * ============================================================================
  */
@@ -76,7 +66,7 @@ static bool dump_local_qf_to_main(flush_object *obj)
 	CQF<KeyObject>::Iterator it = obj->local_cqf->begin();
 	do {
 		KeyObject hash = it.get_cur_hash();
-		int ret = obj->main_cqf->insert(hash, WAIT_FOR_LOCK | KEY_IS_HASH);
+		int ret = obj->main_cqf->insert(hash, QF_WAIT_FOR_LOCK | QF_KEY_IS_HASH);
 		if (ret == -1) {
 			obj->console->error("The CQF is full. Please rerun the with a larger size.");
 			return false;
@@ -134,12 +124,12 @@ start_read:
 			 * insert the item in the local QF.
 			 */
 			KeyObject k(item, 0, 1);
-			int ret = obj->main_cqf->insert(k, TRY_ONCE_LOCK);
+			int ret = obj->main_cqf->insert(k, QF_TRY_ONCE_LOCK);
 			if (ret == -1) {
 				obj->console->error("The CQF is full. Please rerun the with a larger size.");
 				exit(1);
 			} else if (ret == -2) {
-				obj->local_cqf->insert(k, NO_LOCK);
+				obj->local_cqf->insert(k, QF_NO_LOCK);
 				obj->count++;
 				// check of the load factor of the local QF is more than 50%
 				if (obj->count > 1ULL<<(QBITS_LOCAL_QF-1)) {
@@ -176,12 +166,12 @@ start_read:
 				 * insert the item in the local QF.
 				 */
 				KeyObject k(item, 0, 1);
-				ret = obj->main_cqf->insert(k, TRY_ONCE_LOCK);
+				ret = obj->main_cqf->insert(k, QF_TRY_ONCE_LOCK);
 				if (ret == -1) {
 					obj->console->error("The CQF is full. Please rerun the with a larger size.");
 					exit(1);
 				} else if (ret == -2) {
-					obj->local_cqf->insert(k, NO_LOCK);
+					obj->local_cqf->insert(k, QF_NO_LOCK);
 					obj->count++;
 					// check of the load factor of the local QF is more than 50%
 					if (obj->count > 1ULL<<(QBITS_LOCAL_QF-1)) {
@@ -270,11 +260,11 @@ int count_main(CountOpts &opts)
 	if (opts.numthreads == 0)
 		opts.numthreads = std::thread::hardware_concurrency();
 
-	enum qf_hashmode hash = DEFAULT;
+	enum qf_hashmode hash = QF_HASH_DEFAULT;
 	int num_hash_bits = opts.qbits+8;	// we use 8 bits for remainders in the main QF
 	if (opts.exact) {
 		num_hash_bits = 2*opts.ksize; // Each base 2 bits.
-		hash = INVERTIBLE;
+		hash = QF_HASH_INVERTIBLE;
 	}
 
 	std::string ser_ext(".squeakr");
@@ -313,25 +303,7 @@ int count_main(CountOpts &opts)
 		}
 	}
 
-	std::string output_dir = opts.output_dir;
-	std::string prefix = opts.prefix;
-	// make the output directory if it doesn't exist
-	if (!squeakr::fs::DirExists(output_dir.c_str())) {
-		squeakr::fs::MakeDir(output_dir.c_str());
-	}
-	// check to see if the output dir exists now
-	if (!squeakr::fs::DirExists(output_dir.c_str())) {
-		console->error("Output dir {} could not be successfully created.", prefix);
-		exit(1);
-	}
-	if (output_dir.back() != '/') {
-		output_dir += '/';
-	}
-
-	std::string ds_file =      output_dir + prefix + ser_ext;
-	std::string log_file =     output_dir + prefix + log_ext;
-	std::string cluster_file = output_dir + prefix + cluster_ext;
-	std::string freq_file =    output_dir + prefix + freq_ext;
+	std::string ds_file = opts.output_file;
 
 	//Initialize the main  QF
 	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, hash, SEED);
@@ -357,7 +329,7 @@ int count_main(CountOpts &opts)
 	gettimeofday(&start1, &tzp);
 	prod_threads.join_all();
 
-	if (opts.cutoff > 1) {
+	if (opts.cutoff > 1 || opts.contains_counts == 0) {
 		console->info("Filtering k-mers based on the cutoff.");
 		uint64_t num_kmers{0}, estimated_size{0}, log_estimated_size{0};
 		CQF<KeyObject>::Iterator it = cqf.begin();
@@ -366,12 +338,12 @@ int count_main(CountOpts &opts)
 			if (hash.count >= (uint32_t)opts.cutoff)
 				num_kmers++;
 			//console->info("hash fraction: {}", k.key / (float)cqf.range());
-			if (cqf.get_unique_index(hash, KEY_IS_HASH) / (float)(1ULL <<
+			if (cqf.get_unique_index(hash, QF_KEY_IS_HASH) / (float)(1ULL <<
 																														opts.qbits) >
 					0.05) {
 				estimated_size = num_kmers * (cqf.range() / hash.key);
 				//console->info("estimated size: {}", estimated_size);
-				if (!opts.no_counts)
+				if (opts.contains_counts == 1)
 					estimated_size *= 3;    // to account for counts.
 				log_estimated_size = ceil(log2(estimated_size));
 				uint64_t total_slots = 1ULL << log_estimated_size;
@@ -391,11 +363,11 @@ int count_main(CountOpts &opts)
 			KeyObject hash = it.get_cur_hash();
 			if (hash.count >= (uint32_t)opts.cutoff) {
 				int ret;
-				if (!opts.no_counts)
-					ret = filtered_cqf.insert(hash, NO_LOCK | KEY_IS_HASH);
+				if (opts.contains_counts == 1)
+					ret = filtered_cqf.insert(hash, QF_NO_LOCK | QF_KEY_IS_HASH);
 				else {
 					hash.count = 1;
-					ret = filtered_cqf.insert(hash, NO_LOCK | KEY_IS_HASH);
+					ret = filtered_cqf.insert(hash, QF_NO_LOCK | QF_KEY_IS_HASH);
 				}
 				if (ret == -1) {
 					console->error("The CQF is full. Estimated size of the final CQF is wrong.");
@@ -438,6 +410,8 @@ int count_main(CountOpts &opts)
 	squeakr_file.seekp(0, squeakr_file.end);
 	squeakrconfig config;
 	config.kmer_size = opts.ksize;
+	config.cutoff = opts.cutoff;
+	config.contains_counts = opts.contains_counts;
 	squeakr_file.write((const char*)&config, sizeof(config));
 	squeakr_file.close();
 
