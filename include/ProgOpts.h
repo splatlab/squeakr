@@ -21,6 +21,7 @@ class CountOpts {
 		int cutoff {1};
 		int contains_counts{1};
 		int qbits {0};
+		bool setqbits{false};
 		int numthreads{0};
 		std::string output_file;
 		std::vector<std::string> filenames;

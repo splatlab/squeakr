@@ -88,6 +88,14 @@ int main ( int argc, char *argv[] ) {
     return true;
   };
 
+	auto enusure_size_is_specified = [](const int thread) -> bool {
+		if (!countopt.setqbits &&  thread > 1) {
+			std::string e = "Size option is required is thread count is greater than 1.";
+			throw std::runtime_error{e};
+		}
+		return true;
+	};
+
 	auto count_mode = (
 									command("count").set(selected, mode::count),
 									option("-e", "--exact").set(countopt.exact, 1) %
@@ -98,10 +106,10 @@ int main ( int argc, char *argv[] ) {
 									"only output k-mers with count greater than or equal to cutoff (default = 1)",
 									option("-n","--no-counts").set(countopt.contains_counts, 0) %
 									"only output k-mers and no counts (default = false)",
-									required("-s","--log-slots") & value("log-slots",
-																											 countopt.qbits) % "log of number of slots in the CQF",
-									option("-t","--threads") & value("num-threads",
-																										 countopt.numthreads) %
+									option("-s","--log-slots").set(countopt.setqbits) &
+									value("log-slots", countopt.qbits) % "log of number of slots in the CQF",
+									option("-t","--threads") & value(enusure_size_is_specified,
+																									 "num-threads", countopt.numthreads) %
 									"number of threads to use to count (default = number of hardware threads)",
 									required("-o","--output-file") &
 									value(ensure_parent_dir_exists, "out-file",
