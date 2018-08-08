@@ -67,7 +67,7 @@ static bool dump_local_qf_to_main(flush_object *obj)
 	do {
 		KeyObject hash = it.get_cur_hash();
 		int ret = obj->main_cqf->insert(hash, QF_WAIT_FOR_LOCK | QF_KEY_IS_HASH);
-		if (ret == -1) {
+		if (ret == QF_NO_SPACE) {
 			obj->console->error("The CQF is full. Please rerun the with a larger size.");
 			return false;
 		}
@@ -125,7 +125,7 @@ start_read:
 			 */
 			KeyObject k(item, 0, 1);
 			int ret = obj->main_cqf->insert(k, QF_TRY_ONCE_LOCK);
-			if (ret == -1) {
+			if (ret == QF_NO_SPACE) {
 				obj->console->error("The CQF is full. Please rerun the with a larger size.");
 				exit(1);
 			} else if (ret == -2) {
@@ -167,7 +167,7 @@ start_read:
 				 */
 				KeyObject k(item, 0, 1);
 				ret = obj->main_cqf->insert(k, QF_TRY_ONCE_LOCK);
-				if (ret == -1) {
+				if (ret == QF_NO_SPACE) {
 					obj->console->error("The CQF is full. Please rerun the with a larger size.");
 					exit(1);
 				} else if (ret == -2) {
@@ -307,6 +307,8 @@ int count_main(CountOpts &opts)
 
 	//Initialize the main  QF
 	CQF<KeyObject> cqf(opts.qbits, num_hash_bits, hash, SEED);
+	if (opts.numthreads == 1)
+		cqf.set_auto_resize();
 	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
 																											 sizeof(CQF<KeyObject>));
 
@@ -329,7 +331,11 @@ int count_main(CountOpts &opts)
 	gettimeofday(&start1, &tzp);
 	prod_threads.join_all();
 
-	if (opts.cutoff > 1 || opts.contains_counts == 0) {
+	// Resize the CQF if:
+	//      there is cutoff value greater than 1
+	//      the final CQF doesn't need counts
+	//      the default size if used
+	if (opts.cutoff > 1 || opts.contains_counts == 0 || !opts.setqbits) {
 		console->info("Filtering k-mers based on the cutoff.");
 		uint64_t num_kmers{0}, estimated_size{0}, log_estimated_size{0};
 		CQF<KeyObject>::Iterator it = cqf.begin();
@@ -356,29 +362,32 @@ int count_main(CountOpts &opts)
 			++it;
 		}
 		console->info("Estimated size of the final CQF: {}", log_estimated_size);
-		CQF<KeyObject> filtered_cqf(log_estimated_size, num_hash_bits, hash, SEED);
-		it = cqf.begin();
-		uint64_t max_cnt = 0;
-		while (!it.done()) {
-			KeyObject hash = it.get_cur_hash();
-			if (hash.count >= (uint32_t)opts.cutoff) {
-				int ret;
-				if (opts.contains_counts == 1)
-					ret = filtered_cqf.insert(hash, QF_NO_LOCK | QF_KEY_IS_HASH);
-				else {
-					hash.count = 1;
-					ret = filtered_cqf.insert(hash, QF_NO_LOCK | QF_KEY_IS_HASH);
+		if (cqf.numslots() > (1ULL << log_estimated_size)) {
+			CQF<KeyObject> filtered_cqf(log_estimated_size, num_hash_bits, hash, SEED);
+			filtered_cqf.set_auto_resize();
+			it = cqf.begin();
+			uint64_t max_cnt = 0;
+			while (!it.done()) {
+				KeyObject hash = it.get_cur_hash();
+				if (hash.count >= (uint32_t)opts.cutoff) {
+					int ret;
+					if (opts.contains_counts == 1)
+						ret = filtered_cqf.insert(hash, QF_NO_LOCK | QF_KEY_IS_HASH);
+					else {
+						hash.count = 1;
+						ret = filtered_cqf.insert(hash, QF_NO_LOCK | QF_KEY_IS_HASH);
+					}
+					if (ret == QF_NO_SPACE) {
+						console->error("The CQF is full. Estimated size of the final CQF is wrong.");
+						exit(1);
+					}
 				}
-				if (ret == -1) {
-					console->error("The CQF is full. Estimated size of the final CQF is wrong.");
-					exit(1);
-				}
+				if (max_cnt < hash.count)
+					max_cnt = hash.count;
+				++it;
 			}
-			if (max_cnt < hash.count)
-				max_cnt = hash.count;
-			++it;
+			cqf = filtered_cqf;
 		}
-		cqf = filtered_cqf;
 	}
 	// serialize the CQF to disk.
 	cqf.serialize(ds_file);

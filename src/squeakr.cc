@@ -88,9 +88,9 @@ int main ( int argc, char *argv[] ) {
     return true;
   };
 
-	auto enusure_size_is_specified = [](const int thread) -> bool {
-		if (!countopt.setqbits &&  thread > 1) {
-			std::string e = "Size option is required is thread count is greater than 1.";
+	auto enusure_size_is_specified = [](const CountOpts countopt) -> bool {
+		if (!countopt.setqbits &&  countopt.numthreads == 0) {
+			std::string e = "Size option is required if the thread count is greater than 1.";
 			throw std::runtime_error{e};
 		}
 		return true;
@@ -106,10 +106,10 @@ int main ( int argc, char *argv[] ) {
 									"only output k-mers with count greater than or equal to cutoff (default = 1)",
 									option("-n","--no-counts").set(countopt.contains_counts, 0) %
 									"only output k-mers and no counts (default = false)",
-									option("-s","--log-slots").set(countopt.setqbits) &
-									value("log-slots", countopt.qbits) % "log of number of slots in the CQF",
-									option("-t","--threads") & value(enusure_size_is_specified,
-																									 "num-threads", countopt.numthreads) %
+									option("-s","--log-slots").set(countopt.setqbits, true) &
+									value("log-slots", countopt.qbits) % "log of number of slots in the CQF. (Size argument is only optional when numthreads is exactly 1.)",
+									option("-t","--threads") & value("num-threads",
+																									 countopt.numthreads) %
 									"number of threads to use to count (default = number of hardware threads)",
 									required("-o","--output-file") &
 									value(ensure_parent_dir_exists, "out-file",
@@ -175,13 +175,24 @@ int main ( int argc, char *argv[] ) {
   }
 
   if(res) {
-    switch(selected) {
-    case mode::count: count_main(countopt);  break;
-    case mode::query: query_main(queryopt);  break;
-    case mode::inner_prod: inner_prod_main(innerprodopt);  break;
-    case mode::list: list_main(listopt);  break;
-    case mode::help: std::cout << make_man_page(cli, "squeakr"); break;
-    }
+		switch(selected) {
+			case mode::count:
+				try {
+					enusure_size_is_specified(countopt);
+				} catch (std::exception& e) {
+					std::cout << "\n\nParsing command line failed with exception: " <<
+						e.what() << "\n";
+					std::cout << "\n\n";
+					std::cout << make_man_page(cli, "squeakr");
+					return 1;
+				}
+				count_main(countopt);
+				break;
+			case mode::query: query_main(queryopt);  break;
+			case mode::inner_prod: inner_prod_main(innerprodopt);  break;
+			case mode::list: list_main(listopt);  break;
+			case mode::help:  break;
+		}
   } else {
     auto b = res.begin();
     auto e = res.end();
