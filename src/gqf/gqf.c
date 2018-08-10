@@ -1959,7 +1959,8 @@ int qf_insert(QF *qf, uint64_t key, uint64_t value, uint64_t count, uint8_t
 				ret = QF_NO_SPACE;
 			}
 		} else
-			fprintf(stderr, "The CQF is filling up.\n");
+			fprintf(stderr, "The CQF is full.\n");
+			ret = QF_NO_SPACE;
 	}
 	return ret;
 }
