@@ -20,7 +20,7 @@ class CountOpts {
 		int ksize;
 		int cutoff {1};
 		int contains_counts{1};
-		int qbits {0};
+		int qbits {28};
 		bool setqbits{false};
 		int numthreads{0};
 		std::string output_file;

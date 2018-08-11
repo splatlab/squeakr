@@ -254,9 +254,6 @@ int count_main(CountOpts &opts)
 		return 1;
 	}
 
-	if (opts.qbits == 0)
-		opts.qbits = 28;
-
 	if (opts.numthreads == 0)
 		opts.numthreads = std::thread::hardware_concurrency();
 
@@ -336,7 +333,13 @@ int count_main(CountOpts &opts)
 	//      the final CQF doesn't need counts
 	//      the default size if used
 	if (opts.cutoff > 1 || opts.contains_counts == 0 || !opts.setqbits) {
-		console->info("Filtering k-mers based on the cutoff.");
+		if (opts.cutoff > 1)
+			console->info("Filtering k-mers based on the cutoff.");
+		else if (opts.contains_counts == 0)
+			console->info("Removing counts from the CQF.");
+		else if (!opts.setqbits)
+			console->info("Trying to compress the final CQF.");
+
 		uint64_t num_kmers{0}, estimated_size{0}, log_estimated_size{0};
 		CQF<KeyObject>::Iterator it = cqf.begin();
 		while (!it.done()) {
