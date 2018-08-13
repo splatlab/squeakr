@@ -50,4 +50,10 @@ class ListOpts {
 		std::shared_ptr<spdlog::logger> console{nullptr};
 };
 
+class InfoOpts {
+	public:
+		std::string squeakr_file;
+		std::shared_ptr<spdlog::logger> console{nullptr};
+};
+
 #endif //__MANTIS_PROG_OPTS__

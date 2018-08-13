@@ -44,7 +44,7 @@ squeakr:					$(OBJDIR)/kmer.o $(OBJDIR)/hashutil.o $(OBJDIR)/util.o \
 									$(OBJDIR)/gqf.o $(OBJDIR)/gqf_file.o \
 									$(OBJDIR)/SqueakrFS.o \
 									$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o \
-									$(OBJDIR)/list.o $(OBJDIR)/squeakr.o
+									$(OBJDIR)/list.o $(OBJDIR)/info.o $(OBJDIR)/squeakr.o
 
 # dependencies between .o files and .h files
 
@@ -57,6 +57,8 @@ $(OBJDIR)/query.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
 												$(LOC_INCLUDE)/util.h
 $(OBJDIR)/innerprod.o: 	$(LOC_INCLUDE)/gqf_cpp.h
 $(OBJDIR)/list.o: 		 	$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/info.o: 		 	$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
 												$(LOC_INCLUDE)/util.h
 $(OBJDIR)/kmer.o: 			$(LOC_SRC)/kmer.cc $(LOC_INCLUDE)/kmer.h
 $(OBJDIR)/util.o: 			$(LOC_SRC)/util.cc $(LOC_INCLUDE)/util.h

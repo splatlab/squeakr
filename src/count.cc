@@ -392,11 +392,6 @@ int count_main(CountOpts &opts)
 			cqf = filtered_cqf;
 		}
 	}
-	// serialize the CQF to disk.
-	cqf.serialize(ds_file);
-	gettimeofday(&end1, &tzp);
-	print_time_elapsed("", &start1, &end1, console);
-
 	console->info("Calculating frequency distribution:");
 	gettimeofday(&start2, &tzp);
 	uint64_t max_cnt = 0;
@@ -407,9 +402,13 @@ int count_main(CountOpts &opts)
 			max_cnt = hash.count;
 		++it;
 	}
-
 	gettimeofday(&end2, &tzp);
-	print_time_elapsed("", &start2, &end2, console);
+	print_time_elapsed("Iteration:", &start2, &end2, console);
+
+	// serialize the CQF to disk.
+	cqf.serialize(ds_file);
+	gettimeofday(&end1, &tzp);
+	print_time_elapsed("Counting:", &start1, &end1, console);
 
 	console->info("Maximum freq: {}", max_cnt);
 
