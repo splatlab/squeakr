@@ -22,7 +22,7 @@ new command: merge
 new command: filter
 (same as merge, but only one input -- internally just runs merge)
 
-new command: info
+new command: info [DONE]
    info <input.squeakr>
 - outputs:
 	- kmer size
