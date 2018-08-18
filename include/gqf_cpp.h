@@ -18,6 +18,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
+#include <sys/mman.h>
 
 #include "gqf/gqf.h"
 #include "gqf/gqf_int.h"
@@ -133,7 +134,7 @@ template <class key_obj>
 CQF<key_obj>::CQF(std::string& filename, enum readmode flag) {
 	uint64_t size = 0;
 	if (flag == MMAP)
-	 size = qf_usefile(&cqf, filename.c_str());
+	 size = qf_usefile(&cqf, filename.c_str(), PROT_READ);
 	else
 		size = qf_deserialize(&cqf, filename.c_str());
 
