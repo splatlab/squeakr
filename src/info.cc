@@ -44,11 +44,6 @@ int info_main(InfoOpts& opts)
 	console->info("Reading squeakr file off the disk.");
 	CQF<KeyObject> cqf(opts.squeakr_file, FREAD);
 
-	if (!cqf.is_exact()) {
-		console->error("The file is not generated using Squeakr-exact.");
-		return 1;
-	}
-
 	// seek to the end of the file and read the k-mer size
 	std::ifstream squeakr_file(opts.squeakr_file, std::ofstream::in);
 	squeakr_file.seekg(0, squeakr_file.end);
