@@ -104,7 +104,7 @@ start_read:
 					if (i + 1 < read.length())
 						read = read.substr(i + 1, read.length());
 					else
-						continue;
+						goto next_read;
 					goto start_read;
 				}
 				first = first | curr;
@@ -148,7 +148,7 @@ start_read:
 					if (i + 1 < read.length())
 						read = read.substr(i + 1, read.length());
 					else
-						continue;
+						goto next_read;
 					goto start_read;
 				}
 				next |= curr;
