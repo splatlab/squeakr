@@ -350,7 +350,7 @@ int count_main(CountOpts &opts)
 			if (cqf.get_unique_index(hash, QF_KEY_IS_HASH) / (float)(1ULL <<
 																														opts.qbits) >
 					0.05) {
-				estimated_size = num_kmers * (cqf.range() / hash.key);
+				estimated_size = num_kmers * (cqf.range() / static_cast<__uint128_t>(hash.key));
 				//console->info("estimated size: {}", estimated_size);
 				if (opts.contains_counts == 1)
 					estimated_size *= 3;    // to account for counts.
