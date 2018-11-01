@@ -365,7 +365,8 @@ int count_main(CountOpts &opts)
 			++it;
 		}
 		console->info("Estimated size of the final CQF: {}", log_estimated_size);
-		if (cqf.numslots() > (1ULL << log_estimated_size)) {
+		if (opts.contains_counts == 0 || cqf.numslots() > (1ULL <<
+																											 log_estimated_size)) {
 			CQF<KeyObject> filtered_cqf(log_estimated_size, num_hash_bits, hash, SEED);
 			filtered_cqf.set_auto_resize();
 			it = cqf.begin();
@@ -385,8 +386,10 @@ int count_main(CountOpts &opts)
 						exit(1);
 					}
 				}
-				if (max_cnt < hash.count)
+				if (max_cnt < hash.count) {
 					max_cnt = hash.count;
+					std::cout << max_cnt << std::endl;
+				}
 				++it;
 			}
 			cqf = filtered_cqf;
