@@ -365,8 +365,10 @@ int count_main(CountOpts &opts)
 			++it;
 		}
 		console->info("Estimated size of the final CQF: {}", log_estimated_size);
-		if (opts.contains_counts == 0 || cqf.numslots() > (1ULL <<
-																											 log_estimated_size)) {
+		if (opts.cutoff > 1 || opts.contains_counts == 0 || cqf.numslots() > (1ULL
+																																					<<
+																																					log_estimated_size))
+		{
 			CQF<KeyObject> filtered_cqf(log_estimated_size, num_hash_bits, hash, SEED);
 			filtered_cqf.set_auto_resize();
 			it = cqf.begin();
