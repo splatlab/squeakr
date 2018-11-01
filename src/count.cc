@@ -386,10 +386,8 @@ int count_main(CountOpts &opts)
 						exit(1);
 					}
 				}
-				if (max_cnt < hash.count) {
+				if (max_cnt < hash.count)
 					max_cnt = hash.count;
-					std::cout << max_cnt << std::endl;
-				}
 				++it;
 			}
 			cqf = filtered_cqf;
