@@ -35,11 +35,28 @@ k-mer insertion, deletion, and modification.
 k-mer counts can be validated by hooking into the C++ level query API. An
 example query program is also available in "kmer_query.cc".
 
+Release notes
+--------
+
+Squeakr now has a new k-mer representation (version 2) based on the new version of the CQF and some few Squeakr specific changes. The new version of Squeakr is not compatible with the old version. We have added some new features to the 'squeakr count' command and a couple of new commands.
+
+
+* Squeakr count command now supports auto-resizing. However, auto-resizing only works when the count command is run with a single thread.
+* Squeakr count command can now filter out k-mers in the final representation below a certain count value.
+* Squeakr count command can now exclude counts in the final representation and only keep k-mers.
+
+* Squeakr list: to list k-mers present in a Squeakr representation. This command only works when the representation is exact.
+
+* Squeakr info: to get the infomation about the Squeakr representation. For example, version, k-mer size, number of k-mers, CQF specific info, etc.
+
 API
 --------
-* 'squeakr-count': count k-mers in a read dataset.
-* 'squeakr-query': query k-mers in the Squeakr representation.
-* 'squeakr-inner-prod': compute inner products of two Squeakr representations.
+* 'squeakr count': count k-mers in a read dataset.
+* 'squeakr query': query k-mers in the Squeakr representation.
+* 'squeakr inner-prod': compute inner products of two Squeakr representations.
+* 'squeakr list': list k-mers in the Squeakr representation. Only in exact
+  representation.
+* 'squeakr info': get information about the Squeakr representation.
 
 Build
 -------
@@ -59,95 +76,74 @@ implementation of select on machine words to work on CPUs older than Haswell.
 To build on an older hardware (older than Haswell) use "NH=1" as a make argument.
 
 ```bash
- $ make squeakr-count
- $ ./squeakr-count -f -k 28 -s 20 -t 1 -o ./ test.fastq
+ $ make squeakr
+ $ ./squeakr count -f -k 28 -s 20 -t 1 -o data/tmp.squeakr data/test.fastq
 ```
 
-The usage of `squeakr-count` is as follows:
+The usage of `./squeakr count` is as follows:
 
 ```bash
 SYNOPSIS
-        ./squeakr-count (-f|-g|-b) -k <k-size> -s <log-slots> -t <num-threads> [-o <out-dir>] <files>... [-h]
+        squeakr count [-e] -k <k-size> [-c <cutoff>] [-n] [-s <log-slots>] [-t <num-threads>] -o <out-file> <files>...
 
 OPTIONS
-        format of the input
-            -f      plain fastq
-            -g      gzip compressed fastq
-            -b      bzip2 compressed fastq
-
+        -e, --exact squeakr-exact (default is Squeakr approximate)
         <k-size>    length of k-mers to count
-        <log-slots> log of number of slots in the CQF
+        <cutoff>    only output k-mers with count greater than or equal to cutoff (default = 1)
+
+        -n, --no-counts
+                    only output k-mers and no counts (default = false)
+
+        <log-slots> log of number of slots in the CQF. (Size argument is only optional when numthreads is exactly 1.)
 
         <num-threads>
-                    number of threads to use to count
+                    number of threads to use to count (default = number of hardware threads)
 
-        <out-dir>   directory where output should be written (default = "./")
-        <files>...  list of files to be counted
-        -h, --help  show help
+        <out-file>  file in which output should be written
+        <files>...  list of files to be counted (supported files: fastq and compressed gzip or bzip2 fastq files)
 ```
 
- Following are the arguments to squeakr-count:
- - file format: 0 - plain fastq, 1 - gzip compressed fastq, 2 - bzip2 compressed fastq
- - k-mer size: the size of the k-mer
- - CQF size: the log of the number of slots in the CQF
- - num of threads: number of threads to count
- - prefix: path to the directory where the output should go
- - file(s): "filename" or "dirname/*" for all the files in a directory
-
-squeakr-count creates a files with the extension ".ser" which is the k-mer representation.
+squeakr-count creates a file <out-file> which is the k-mer representation.
 
 `lognumslots.sh` script can be used to estimate the `log of number of slots in the CQF` argument. The script takes as input the path to the output file of 'ntCard' (https://github.com/bcgsc/ntCard). It then calculates log of the number of slots needed by Squeakr to count k-mers.
 
 ```bash
- $ make squeakr-query
- $ ./squeakr-query -f test.fastq.ser -k 28 -n 1000 -r 0
+ $ ./squeakr query -f data/tmp.squeakr -q data/query_file -o data/query.output
 ```
-The usage of `squeakr-query` is as follows:
+The usage of `./squeakr query` is as follows:
 
 ```bash
 SYNOPSIS
-        ./squeakr-query -f <cqf-file> -k <k-size> -n <num-query> -r <random-queries> [-h]
-
+        squeakr query -f <squeakr-file> -q <query-file> -o <output-file>
 OPTIONS
-        <cqf-file>  input CQF file
-        <k-size>    length of k-mers to query. Must be same the as the size of counted k-mers
-        <num-query> number of queries
+        <squeakr-file>
+                    input squeakr file
 
-        <random-queries>
-                    random queries
+        <query-file>
+                    input query file
 
-        -h, --help  show help
+        <output-file>
+                    output file
 ```
-
- Following are the arguments to squeakr-query:
- - file: dataset Squeakr representation
- - k-mer size: the size of the k-mer
- - num of queries: number of queries
- - random: 0 - query for existing k-mers, 1 - query for random k-mers
 
 ```bash
  $ make squeakr-inner-prod
- $ ./squeakr-inner-prod -a test.fastq.ser -b test.fastq.ser
+ $ ./squeakr inner_prod data/tmp.squeakr data/tmp.squeakr
 ```
- The usage of `squeakr-inner-product` is as follows:
+ The usage of `./squeakr inner_prod` is as follows:
 
 ```bash
 SYNOPSIS
-        ./squeakr-inner-prod -a <cqf-file-first> -b <cqf-file-second> [-h]
+        squeakr inner_prod <first-input> <second-input>
 
 OPTIONS
-        <cqf-file-first>
-                    first input CQF file
+        <first-input>
+                    first input squeakr file
 
-        <cqf-file-second>
-                    second input CQF file
+        <second-input>
+                    second input squeakr file
 
-        -h, --help  show help
 ```
- 
- Following are the arguments to squeakr-inner-prod:
- - test.fastq.ser: dataset 1 Squeakr representation
- - test.fastq.ser: dataset 2 Squeakr representation
 
 Contributing
 ------------

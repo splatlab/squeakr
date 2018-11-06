@@ -1,4 +1,4 @@
-TARGETS= squeakr-count squeakr-query squeakr-inner-prod
+TARGETS= squeakr
 
 ifdef D
 	DEBUG=-g
@@ -19,12 +19,19 @@ ifdef P
 endif
 
 CXX = g++ -std=c++11
-CC = g++ -std=c++11
+CC = gcc -std=gnu11
 LD= g++ -std=c++11
 
-CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -Wno-unused-result -Wno-strict-aliasing -Wno-unused-function -Wno-sign-compare
+LOC_INCLUDE=include
+LOC_SRC=src
+OBJDIR=obj
 
-LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system -lboost_thread -lm -lbz2 -lz
+CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
+
+CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
+
+LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
+-lboost_thread -lm -lbz2 -lz -lrt
 
 #
 # declaration of dependencies
@@ -33,22 +40,33 @@ LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system -lboost_thread -l
 all: $(TARGETS)
 
 # dependencies between programs and .o files
-
-squeakr-count:                  main.o 								 hashutil.o threadsafe-gqf/gqf.o
-squeakr-query: 					 kmer_query.o 					 hashutil.o threadsafe-gqf/gqf.o
-squeakr-inner-prod: 			 kmer_inner_prod.o 			 hashutil.o threadsafe-gqf/gqf.o
+squeakr:					$(OBJDIR)/kmer.o $(OBJDIR)/hashutil.o $(OBJDIR)/util.o \
+									$(OBJDIR)/gqf.o $(OBJDIR)/gqf_file.o \
+									$(OBJDIR)/SqueakrFS.o \
+									$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o \
+									$(OBJDIR)/list.o $(OBJDIR)/info.o $(OBJDIR)/squeakr.o
 
 # dependencies between .o files and .h files
 
-main.o: 								 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h reader.h
-kmer_query.o: 					 									threadsafe-gqf/gqf.h hashutil.h chunk.h kmer.h
-kmer_inner_prod.o: 			 									threadsafe-gqf/gqf.h hashutil.h
-hashutil.o: 																									 hashutil.h
+$(OBJDIR)/squeakr.o:		$(LOC_SRC)/squeakr.cc
+$(OBJDIR)/count.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/chunk.h \
+												$(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/reader.h $(LOC_INCLUDE)/util.h \
+												$(LOC_INCLUDE)/SqueakrFS.h
+$(OBJDIR)/query.o: 			$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/innerprod.o: 	$(LOC_INCLUDE)/gqf_cpp.h
+$(OBJDIR)/list.o: 		 	$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/info.o: 		 	$(LOC_INCLUDE)/gqf_cpp.h $(LOC_INCLUDE)/kmer.h \
+												$(LOC_INCLUDE)/util.h
+$(OBJDIR)/kmer.o: 			$(LOC_SRC)/kmer.cc $(LOC_INCLUDE)/kmer.h
+$(OBJDIR)/util.o: 			$(LOC_SRC)/util.cc $(LOC_INCLUDE)/util.h
 
 # dependencies between .o files and .cc (or .c) files
-
-%.o: %.cc
-threadsafe-gqf/gqf.o: threadsafe-gqf/gqf.c threadsafe-gqf/gqf.h
+$(OBJDIR)/gqf.o: 				$(LOC_SRC)/gqf/gqf.c $(LOC_INCLUDE)/gqf/gqf.h
+$(OBJDIR)/gqf_file.o: 	$(LOC_SRC)/gqf/gqf_file.c $(LOC_INCLUDE)/gqf/gqf_file.h
+$(OBJDIR)/hashutil.o: 	$(LOC_INCLUDE)/gqf/hashutil.h
 
 #
 # generic build rules
@@ -57,12 +75,18 @@ threadsafe-gqf/gqf.o: threadsafe-gqf/gqf.c threadsafe-gqf/gqf.h
 $(TARGETS):
 	$(LD) $^ $(LDFLAGS) -o $@
 
-%.o: %.cc
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -c -o $@
+$(OBJDIR)/%.o: $(LOC_SRC)/%.cc | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c -o $@ $<
 
-%.o: %.c
-	$(CC) $(CXXFLAGS) $(INCLUDE) $< -c -o $@
+$(OBJDIR)/%.o: $(LOC_SRC)/%.c | $(OBJDIR)
+	$(CXX) $(CFLAGS) $(INCLUDE) -c -o $@ $<
+
+$(OBJDIR)/%.o: $(LOC_SRC)/gqf/%.c | $(OBJDIR)
+	$(CXX) $(CFLAGS) $(INCLUDE) -c -o $@ $<
+
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
 
 clean:
-	rm -f *.o threadsafe-gqf/gqf.o $(TARGETS)
+	rm -rf $(OBJDIR) core $(TARGETS)
 
