@@ -35,6 +35,22 @@ k-mer insertion, deletion, and modification.
 k-mer counts can be validated by hooking into the C++ level query API. An
 example query program is also available in "kmer_query.cc".
 
+Release notes
+--------
+
+Squeakr now has a new k-mer representation (version 2) based on the new version of the CQF and some few Squeakr specific changes. The new version of Squeakr is not compatible with the old version. We have added some new features to the 'squeakr count' command and a couple of new commands.
+
+
+* Squeakr count command now supports auto-resizing. However, auto-resizing only works when the count command is run with a single thread.
+* Squeakr count command can now filter out k-mers in the final representation below a certain count value.
+* Squeakr count command can now exclude counts in the final representation and only keep k-mers.
+
+* Squeakr list: to list k-mers present in a Squeakr representation. This command only works when the representation is exact.
+
+* Squeakr info: to get the infomation about the Squeakr representation. For example, version, k-mer size, number of k-mers, CQF specific info, etc.
+
+```bash
+
 API
 --------
 * 'squeakr count': count k-mers in a read dataset.
@@ -93,9 +109,6 @@ squeakr-count creates a file <out-file> which is the k-mer representation.
 
 `lognumslots.sh` script can be used to estimate the `log of number of slots in the CQF` argument. The script takes as input the path to the output file of 'ntCard' (https://github.com/bcgsc/ntCard). It then calculates log of the number of slots needed by Squeakr to count k-mers.
 
-Note: Squeakr count command now supports auto-resizing. However, auto-resizing only works when the count command is run with a single thread.
-
-```bash
  $ ./squeakr query -f data/tmp.squeakr -q data/query_file -o data/query.output
 ```
 The usage of `./squeakr query` is as follows:
