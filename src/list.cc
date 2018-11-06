@@ -46,7 +46,7 @@ int list_main(ListOpts& opts)
 	CQF<KeyObject> cqf(opts.squeakr_file, FREAD);
 
 	if (!cqf.is_exact()) {
-		console->error("The file is not generated using Squeakr-exact.");
+		console->error("This is not a Squeakr exact representation.");
 		return 1;
 	}
 	
