@@ -2,7 +2,7 @@
 
 if [ $# -eq 0 ]
 then
-    echo "No input arguments provided.  Usage is merge_into_develop.sh <branch_to_merge_in>"
+    echo "No input arguments provided.  Usage is merge_into_development.sh <branch_to_merge_in>"
     exit 1
 fi
 
@@ -10,7 +10,7 @@ feature=$1
 
 # from https://stackoverflow.com/questions/173919/is-there-a-theirs-version-of-git-merge-s-ours
 # in case branchA is not our current branch
-git checkout develop
+git checkout development
 
 # make merge commit but without conflicts!!
 # the contents of 'ours' will be discarded later

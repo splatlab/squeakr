@@ -1,0 +1,167 @@
+/*
+ * ============================================================================
+ *
+ *        Authors:  Prashant Pandey <ppandey@cs.stonybrook.edu>
+ *                  Rob Johnson <robj@vmware.com>   
+ *                  Rob Patro (rob.patro@cs.stonybrook.edu)
+ *
+ * ============================================================================
+ */
+
+#include <fstream>
+#include "kmer.h"
+
+
+/*return the integer representation of the base */
+char Kmer::map_int(uint8_t base)
+{
+	switch(base) {
+		case DNA_MAP::A: { return 'A'; }
+		case DNA_MAP::T: { return 'T'; }
+		case DNA_MAP::C: { return 'C'; }
+		case DNA_MAP::G: { return 'G'; }
+		default:  { return DNA_MAP::G+1; }
+	}
+}
+
+/*return the integer representation of the base */
+uint8_t Kmer::map_base(char base)
+{
+	switch(base) {
+		case 'A': { return DNA_MAP::A; }
+		case 'T': { return DNA_MAP::T; }
+		case 'C': { return DNA_MAP::C; }
+		case 'G': { return DNA_MAP::G; }
+		default:  { return DNA_MAP::G+1; }
+	}
+}
+
+/**
+ * Converts a string of "ATCG" to a uint64_t
+ * where each character is represented by using only two bits
+ */
+__int128_t Kmer::str_to_int(std::string str)
+{
+	__int128_t strint = 0;
+	for (auto it = str.begin(); it != str.end(); it++) {
+		uint8_t curr = 0;
+		switch (*it) {
+			case 'A': { curr = DNA_MAP::A; break; }
+			case 'T': { curr = DNA_MAP::T; break; }
+			case 'C': { curr = DNA_MAP::C; break; }
+			case 'G': { curr = DNA_MAP::G; break; }
+		}
+		strint = strint | curr;
+		strint = strint << 2;
+	}
+	return strint >> 2;
+}
+
+/**
+ * Converts a uint64_t to a string of "ACTG"
+ * where each character is represented by using only two bits
+ */
+std::string Kmer::int_to_str(__int128_t kmer, uint64_t kmer_size)
+{
+	uint8_t base;
+	std::string str;
+	for (uint32_t i = kmer_size; i > 0; i--) {
+		base = (kmer >> (i*2-2)) & 3ULL;
+		char chr = Kmer::map_int(base);
+		str.push_back(chr);
+	}
+	return str;
+}
+
+/* Return the reverse complement of a base */
+int Kmer::reverse_complement_base(int x) { return 3 - x; }
+
+/* Calculate the revsese complement of a kmer */
+__int128_t Kmer::reverse_complement(__int128_t kmer, uint64_t kmer_size)
+{
+	__int128_t rc = 0;
+	uint8_t base = 0;
+	for (uint32_t i = 0; i < kmer_size; i++) {
+		base = kmer & 3ULL;
+		base = reverse_complement_base(base);
+		kmer >>= 2;
+		rc |= base;
+		rc <<= 2;
+	}
+	rc >>=2;
+	return rc;
+}
+
+/* Compare the kmer and its reverse complement and return the result 
+ * Return true if the kmer is greater than or equal to its
+ * reverse complement. 
+ * */
+bool Kmer::compare_kmers(__int128_t kmer, __int128_t kmer_rev)
+{
+	return kmer >= kmer_rev;
+}
+
+void Kmer::parse_kmers(const char *filename, uint64_t kmer_size,
+											 std::unordered_set<uint64_t>& kmerset) {
+	std::ifstream ipfile(filename);
+	std::string read;
+	while (ipfile >> read) {
+
+start_read:
+		if (read.length() < kmer_size)
+			continue;
+		{
+			uint64_t first = 0;
+			uint64_t first_rev = 0;
+			uint64_t item = 0;
+			for(uint32_t i = 0; i < kmer_size; i++) { //First kmer
+				uint8_t curr = Kmer::map_base(read[i]);
+				if (curr > DNA_MAP::G) { // 'N' is encountered
+					if (i + 1 < read.length())
+						read = read.substr(i + 1, read.length());
+					else
+						continue;
+					goto start_read;
+				}
+				first = first | curr;
+				first = first << 2;
+			}
+			first = first >> 2;
+			first_rev = Kmer::reverse_complement(first, kmer_size);
+
+			if (Kmer::compare_kmers(first, first_rev))
+				item = first;
+			else
+				item = first_rev;
+
+			kmerset.insert(item);
+
+			uint64_t next = (first << 2) & BITMASK(2*kmer_size);
+			uint64_t next_rev = first_rev >> 2;
+
+			for(uint32_t i=kmer_size; i<read.length(); i++) { //next kmers
+				uint8_t curr = Kmer::map_base(read[i]);
+				if (curr > DNA_MAP::G) { // 'N' is encountered
+					if (i + 1 < read.length())
+						read = read.substr(i + 1, read.length());
+					else
+						continue;
+					goto start_read;
+				}
+				next |= curr;
+				uint64_t tmp = Kmer::reverse_complement_base(curr);
+				tmp <<= (kmer_size*2-2);
+				next_rev = next_rev | tmp;
+				if (Kmer::compare_kmers(next, next_rev))
+					item = next;
+				else
+					item = next_rev;
+
+				kmerset.insert(item);
+
+				next = (next << 2) & BITMASK(2*kmer_size);
+				next_rev = next_rev >> 2;
+			}
+		}
+	}
+}
