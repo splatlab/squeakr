@@ -77,7 +77,7 @@ To build on an older hardware (older than Haswell) use "NH=1" as a make argument
 
 ```bash
  $ make squeakr
- $ ./squeakr count -f -k 28 -s 20 -t 1 -o data/tmp.squeakr data/test.fastq
+ $ ./squeakr count -e -k 28 -s 20 -t 1 -o data/tmp.squeakr data/test.fastq
 ```
 
 The usage of `./squeakr count` is as follows:
