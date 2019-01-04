@@ -42,7 +42,7 @@ int info_main(InfoOpts& opts)
 
 	//Initialize the QF
 	console->info("Reading squeakr file off the disk.");
-	CQF<KeyObject> cqf(opts.squeakr_file, FREAD);
+	CQF<KeyObject> cqf(opts.squeakr_file, MMAP);
 
 	// seek to the end of the file and read the k-mer size
 	std::ifstream squeakr_file(opts.squeakr_file, std::ofstream::in);
