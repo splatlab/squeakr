@@ -31,9 +31,13 @@ CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
 CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
 
 LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread \
-        -lm -lbz2 -lz #\ -lrt
-#-lboost_system \
-#-lboost_thread \
+        -lm -lbz2 -lz
+ifdef BOOST
+LDFLAGS +=  \
+ -lrt \
+ -lboost_system \
+ -lboost_thread -DUSE_BOOST
+endif
 
 #
 # declaration of dependencies

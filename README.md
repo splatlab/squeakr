@@ -62,10 +62,15 @@ Build
 -------
 
 Library dependencies (given version or higher):
- - libboost-dev 1.58.0.1ubuntu1
  - libssl-dev 1.0.2g-1ubuntu4.6
  - zlib1g-dev 1:1.2.8.dfsg-2ubuntu4
  - bzip2 1.0.6-8
+
+This may be build with libboost. If so, pass `BOOST=1` to make and ensure that you have:
+ - libboost-dev 1.58.0.1ubuntu1
+
+Otherwise, this will be built with std::atomic/std::thread and [SPSCQueue](https://github.com/rigtorp/SPSCQueue)
+for a lock-free concurrent queue.
 
 Squeakr currently only supports fastq files. If any other file formats are
 passed as input then it will throw a segmentation fault.
