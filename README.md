@@ -72,6 +72,9 @@ This may be build with libboost. If so, pass `BOOST=1` to make and ensure that y
 Otherwise, this will be built with std::atomic/std::thread and [SPSCQueue](https://github.com/rigtorp/SPSCQueue)
 for a lock-free concurrent queue.
 
+Squeakr also requires `posix_fallocate`, which is not supported on OSX.
+We've provided a platform-specific simulation for it [based on Mozilla's fallocate implementation for compilation on OSX](https://git.reviewboard.kde.org/r/129267/).
+
 Squeakr currently only supports fastq files. If any other file formats are
 passed as input then it will throw a segmentation fault.
 
