@@ -27,6 +27,7 @@
 #include "gqf/gqf.h"
 #include "gqf/gqf_int.h"
 #include "gqf/gqf_file.h"
+#include "posix_fallocate_osx.h"
 
 #define NUM_SLOTS_TO_LOCK (1ULL<<16)
 

@@ -17,10 +17,14 @@
 #include <cassert>
 #include <fstream>
 
+#if USE_BOOST
 #include <boost/thread/thread.hpp>
 #include <boost/lockfree/queue.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
 #include <boost/atomic.hpp>
+#else
+#include <atomic>
+#endif
 
 #include <time.h>
 #include <stdio.h>
@@ -54,7 +58,7 @@ int query_main(QueryOpts& opts)
 
 	//Initialize the QF
 	console->info("Reading kmers into the QF off the disk.");
-	CQF<KeyObject> cqf(opts.squeakr_file, FREAD);
+	CQF<KeyObject> cqf(opts.squeakr_file, FREAD_MODE);
 
 	// seek to the end of the file and read the k-mer size
 	std::ifstream squeakr_file(opts.squeakr_file, std::ofstream::in);

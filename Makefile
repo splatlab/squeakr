@@ -18,9 +18,9 @@ ifdef P
 	PROFILE=-pg -no-pie # for bug in gprof.
 endif
 
-CXX = g++ -std=c++11
-CC = gcc -std=gnu11
-LD= g++ -std=c++11
+CXX?=g++ -std=c++11
+CC?=gcc -std=c++11
+LD=$(CXX) -std=c++11
 
 LOC_INCLUDE=include
 LOC_SRC=src
@@ -30,8 +30,10 @@ CXXFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
 
 CFLAGS += -Wall $(DEBUG) $(PROFILE) $(OPT) $(ARCH) -m64 -I. -I$(LOC_INCLUDE)
 
-LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread -lboost_system \
--lboost_thread -lm -lbz2 -lz -lrt
+LDFLAGS += $(DEBUG) $(PROFILE) $(OPT) -lpthread \
+        -lm -lbz2 -lz #\ -lrt
+#-lboost_system \
+#-lboost_thread \
 
 #
 # declaration of dependencies

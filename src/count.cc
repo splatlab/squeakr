@@ -18,10 +18,19 @@
 #include <cassert>
 #include <fstream>
 
+#if USE_BOOST
 #include <boost/thread/thread.hpp>
 #include <boost/lockfree/queue.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
 #include <boost/atomic.hpp>
+using boost::atomic;
+#else
+#include <thread>
+#include <atomic>
+#include <SPSCQueue.h>
+using namespace rigtorp;
+using std::atomic;
+#endif
 
 #include <time.h>
 #include <stdio.h>
@@ -57,8 +66,12 @@ typedef struct {
 } flush_object;
 
 /*create a multi-prod multi-cons queue for storing the chunk of fastq file.*/
+#if USE_BOOST
 boost::lockfree::queue<file_pointer*, boost::lockfree::fixed_sized<true> > ip_files(64);
-boost::atomic<int> num_files {0};
+#else
+SPSCQueue<file_pointer*> ip_files(64);
+#endif
+atomic<int> num_files {0};
 
 /* dump the contents of a local QF into the main QF */
 static bool dump_local_qf_to_main(flush_object *obj)
@@ -206,7 +219,14 @@ static bool fastq_to_uint64kmers_prod(flush_object* obj)
 	file_pointer* fp;
 
 	while (num_files) {
+#if USE_BOOST
 		while (ip_files.pop(fp)) {
+#else
+        file_pointer **p;
+        while((p = ip_files.front())) {
+            fp = *p;
+            ip_files.pop();
+#endif
 			if (reader::fastq_read_parts(fp->mode, fp)) {
 				ip_files.push(fp);
 				chunk c(fp->part, fp->size);
@@ -309,7 +329,11 @@ int count_main(CountOpts &opts)
 	CQF<KeyObject> *local_cqfs = (CQF<KeyObject>*)calloc(MAX_NUM_THREADS,
 																											 sizeof(CQF<KeyObject>));
 
+#if USE_BOOST
 	boost::thread_group prod_threads;
+#else
+    std::vector<std::thread> prod_threads;
+#endif
 
 	for (int i = 0; i < opts.numthreads; i++) {
 		local_cqfs[i] = CQF<KeyObject>(QBITS_LOCAL_QF, num_hash_bits, hash, SEED);
@@ -320,13 +344,23 @@ int count_main(CountOpts &opts)
 		obj->exact = opts.exact;
 		obj->count = 0;
 		obj->console = console;
-		prod_threads.add_thread(new boost::thread(fastq_to_uint64kmers_prod,
+#if USE_BOOST
+		prod_threads.add_thread(new boost::thread(
+fastq_to_uint64kmers_prod,
 																							obj));
+#else
+        prod_threads.emplace_back(fastq_to_uint64kmers_prod,
+																							obj);
+#endif
 	}
 
 	console->info("Reading from the fastq file and inserting in the CQF.");
 	gettimeofday(&start1, &tzp);
+#if USE_BOOST
 	prod_threads.join_all();
+#else
+	for(auto &thread: prod_threads) thread.join();
+#endif
 
 	// Resize the CQF if:
 	//      there is cutoff value greater than 1

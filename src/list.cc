@@ -43,7 +43,7 @@ int list_main(ListOpts& opts)
 
 	//Initialize the QF
 	console->info("Reading kmers into the QF off the disk.");
-	CQF<KeyObject> cqf(opts.squeakr_file, FREAD);
+	CQF<KeyObject> cqf(opts.squeakr_file, FREAD_MODE);
 
 	if (!cqf.is_exact()) {
 		console->error("This is not a Squeakr exact representation.");

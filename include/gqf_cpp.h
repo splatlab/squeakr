@@ -31,7 +31,7 @@
 
 enum readmode {
 	MMAP,
-	FREAD
+	FREAD_MODE
 };
 
 template <class key_obj>
