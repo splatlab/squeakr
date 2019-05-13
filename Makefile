@@ -22,7 +22,7 @@ CXX?=g++ -std=c++11
 CC?=gcc -std=c++11
 LD=$(CXX) -std=c++11
 
-LOC_INCLUDE=include
+LOC_INCLUDE=./include
 LOC_SRC=src
 OBJDIR=obj
 
@@ -38,6 +38,8 @@ LDFLAGS +=  \
  -lboost_system \
  -lboost_thread -DUSE_BOOST
 endif
+
+INCLUDE=
 
 #
 # declaration of dependencies
