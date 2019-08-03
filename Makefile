@@ -42,7 +42,7 @@ all: $(TARGETS)
 # dependencies between programs and .o files
 squeakr:					$(OBJDIR)/kmer.o $(OBJDIR)/hashutil.o $(OBJDIR)/util.o \
 									$(OBJDIR)/gqf.o $(OBJDIR)/gqf_file.o \
-									$(OBJDIR)/SqueakrFS.o \
+									$(OBJDIR)/partitioned_counter.o $(OBJDIR)/SqueakrFS.o \
 									$(OBJDIR)/count.o $(OBJDIR)/query.o $(OBJDIR)/innerprod.o \
 									$(OBJDIR)/list.o $(OBJDIR)/info.o $(OBJDIR)/squeakr.o
 
@@ -67,6 +67,7 @@ $(OBJDIR)/util.o: 			$(LOC_SRC)/util.cc $(LOC_INCLUDE)/util.h
 $(OBJDIR)/gqf.o: 				$(LOC_SRC)/gqf/gqf.c $(LOC_INCLUDE)/gqf/gqf.h
 $(OBJDIR)/gqf_file.o: 	$(LOC_SRC)/gqf/gqf_file.c $(LOC_INCLUDE)/gqf/gqf_file.h
 $(OBJDIR)/hashutil.o: 	$(LOC_INCLUDE)/gqf/hashutil.h
+$(OBJDIR)/partitioned_counter.o: 	$(LOC_INCLUDE)/gqf/partitioned_counter.h
 
 #
 # generic build rules

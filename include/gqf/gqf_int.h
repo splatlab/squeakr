@@ -14,6 +14,7 @@
 #include <stdbool.h>
 
 #include "gqf.h"
+#include "partitioned_counter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,6 +76,11 @@ extern "C" {
 
 	typedef struct quotient_filter_runtime_data {
 		file_info f_info;
+		uint32_t auto_resize;
+		int64_t (*container_resize)(QF *qf, uint64_t nslots);
+		pc_t pc_nelts;
+		pc_t pc_ndistinct_elts;
+		pc_t pc_noccupied_slots;
 		uint64_t num_locks;
 		volatile int metadata_lock;
 		volatile int *locks;
@@ -86,7 +92,7 @@ extern "C" {
 	typedef struct quotient_filter_metadata {
 		uint64_t magic_endian_number;
 		enum qf_hashmode hash_mode;
-		uint32_t auto_resize;
+		uint32_t reserved;
 		uint64_t total_size_in_bytes;
 		uint32_t seed;
 		uint64_t nslots;
@@ -111,6 +117,20 @@ extern "C" {
 	} quotient_filter;
 
 	typedef quotient_filter QF;
+
+#if QF_BITS_PER_SLOT > 0
+  static inline qfblock * get_block(const QF *qf, uint64_t block_index)
+  {
+    return &qf->blocks[block_index];
+  }
+#else
+  static inline qfblock * get_block(const QF *qf, uint64_t block_index)
+  {
+    return (qfblock *)(((char *)qf->blocks)
+                       + block_index * (sizeof(qfblock) + QF_SLOTS_PER_BLOCK *
+                                        qf->metadata->bits_per_slot / 8));
+  }
+#endif
 
 	// The below struct is used to instrument the code.
 	// It is not used in normal operations of the CQF.
