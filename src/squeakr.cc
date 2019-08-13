@@ -166,7 +166,7 @@ int main ( int argc, char *argv[] ) {
 							(count_mode | query_mode | inner_prod_mode | list_mode |
 							 info_mode |
 							 command("help").set(selected,mode::help) ),
-							option("-v", "--version").call([]{std::cout << "version 1.0\n\n";}).doc("show version")
+							option("-v", "--version").call([]{std::cout << "version 0.7\n\n";}).doc("show version")
 							);
 
   assert(count_mode.flags_are_prefix_free());
