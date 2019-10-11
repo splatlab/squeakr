@@ -10,7 +10,8 @@
 
 #include <fstream>
 #include "kmer.h"
-
+#include <stdlib.h>
+#include <iostream>
 
 /*return the integer representation of the base */
 char Kmer::map_int(uint8_t base)
@@ -114,18 +115,22 @@ start_read:
 			uint64_t first = 0;
 			uint64_t first_rev = 0;
 			uint64_t item = 0;
+			bool flag = false;
 			for(uint32_t i = 0; i < kmer_size; i++) { //First kmer
 				uint8_t curr = Kmer::map_base(read[i]);
 				if (curr > DNA_MAP::G) { // 'N' is encountered
 					if (i + 1 < read.length())
 						read = read.substr(i + 1, read.length());
-					else
-						continue;
+					else {
+						flag = true;
+						break;
+					}
 					goto start_read;
 				}
 				first = first | curr;
 				first = first << 2;
 			}
+			if (flag) continue;
 			first = first >> 2;
 			first_rev = Kmer::reverse_complement(first, kmer_size);
 
@@ -144,10 +149,13 @@ start_read:
 				if (curr > DNA_MAP::G) { // 'N' is encountered
 					if (i + 1 < read.length())
 						read = read.substr(i + 1, read.length());
-					else
-						continue;
+					else {
+						flag = true;
+						break;
+					}
 					goto start_read;
 				}
+				if (flag) continue;
 				next |= curr;
 				uint64_t tmp = Kmer::reverse_complement_base(curr);
 				tmp <<= (kmer_size*2-2);
