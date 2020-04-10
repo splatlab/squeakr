@@ -49,11 +49,11 @@ bool qf_initfile(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t
 		perror("Couldn't open file.");
 		exit(EXIT_FAILURE);
 	}
-	/*ret = posix_fallocate(qf->runtimedata->f_info.fd, 0, total_num_bytes);*/
-	/*if (ret < 0) {*/
-		/*perror("Couldn't fallocate file:\n");*/
-		/*exit(EXIT_FAILURE);*/
-	/*}*/
+	ret = posix_fallocate(qf->runtimedata->f_info.fd, 0, total_num_bytes);
+	if (ret < 0) {
+		perror("Couldn't fallocate file:\n");
+		exit(EXIT_FAILURE);
+	}
 	qf->metadata = (qfmetadata *)mmap(NULL, total_num_bytes, PROT_READ |
 																		PROT_WRITE, MAP_SHARED,
 																		qf->runtimedata->f_info.fd, 0);
@@ -63,7 +63,7 @@ bool qf_initfile(QF *qf, uint64_t nslots, uint64_t key_bits, uint64_t
 	}
 	ret = madvise(qf->metadata, total_num_bytes, MADV_RANDOM);
 	if (ret < 0) {
-		perror("Couldn't madvise file.");
+		perror("Couldn't fallocate file.");
 		exit(EXIT_FAILURE);
 	}
 	qf->blocks = (qfblock *)(qf->metadata + 1);
@@ -178,9 +178,9 @@ int64_t qf_resize_file(QF *qf, uint64_t nslots)
 		exit(EXIT_FAILURE);
 	}
 	// Create new filename
-	int ret = snprintf(new_filename, new_filename_len, "%s_%ld",
+	uint64_t ret = snprintf(new_filename, new_filename_len, "%s_%ld",
 										 qf->runtimedata->f_info.filepath, nslots);
-	if (ret <= (int)strlen(qf->runtimedata->f_info.filepath)) {
+	if (ret <= strlen(qf->runtimedata->f_info.filepath)) {
 		fprintf(stderr, "Wrong new filename created!");
 		return -1;
 	}
@@ -322,7 +322,14 @@ uint64_t qf_deserialize(QF *qf, const char *filename)
 		perror("Couldn't allocate memory for runtime locks.");
 		exit(EXIT_FAILURE);
 	}
-	qf->blocks = (qfblock *)calloc(qf->metadata->total_size_in_bytes, 1);
+	qf->metadata = (qfmetadata *)realloc(qf->metadata,
+																			 qf->metadata->total_size_in_bytes +
+																			 sizeof(qfmetadata));
+	if (qf->metadata == NULL) {
+		perror("Couldn't allocate memory for metadata.");
+		exit(EXIT_FAILURE);
+	}
+	qf->blocks = (qfblock *)(qf->metadata + 1);
 	if (qf->blocks == NULL) {
 		perror("Couldn't allocate memory for blocks.");
 		exit(EXIT_FAILURE);
@@ -333,6 +340,10 @@ uint64_t qf_deserialize(QF *qf, const char *filename)
 		exit(EXIT_FAILURE);
 	}
 	fclose(fin);
+
+	pc_init(&qf->runtimedata->pc_nelts, (int64_t*)&qf->metadata->nelts, 8, 100);
+	pc_init(&qf->runtimedata->pc_ndistinct_elts, (int64_t*)&qf->metadata->ndistinct_elts, 8, 100);
+	pc_init(&qf->runtimedata->pc_noccupied_slots, (int64_t*)&qf->metadata->noccupied_slots, 8, 100);
 
 	return sizeof(qfmetadata) + qf->metadata->total_size_in_bytes;
 }
