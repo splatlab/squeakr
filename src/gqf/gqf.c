@@ -1901,7 +1901,7 @@ int qf_insert(QF *qf, uint64_t key, uint64_t value, uint64_t count, uint8_t
 {
 	// We fill up the CQF up to 95% load factor.
 	// This is a very conservative check.
-	if (qf_get_num_occupied_slots(qf) >= qf->metadata->nslots * 0.95) {
+	if (qf_get_num_occupied_slots_approx(qf) >= qf->metadata->nslots * 0.95) {
 		if (qf->runtimedata->auto_resize) {
 			/*fprintf(stdout, "Resizing the CQF.\n");*/
 			if (qf->runtimedata->container_resize(qf, qf->metadata->nslots * 2) < 0)
@@ -2152,6 +2152,11 @@ uint64_t qf_get_total_size_in_bytes(const QF *qf) {
 uint64_t qf_get_nslots(const QF *qf) {
 	return qf->metadata->nslots;
 }
+uint64_t qf_get_num_occupied_slots_approx(const QF *qf) {
+	//pc_sync(&qf->runtimedata->pc_noccupied_slots);
+	return qf->metadata->noccupied_slots;
+}
+
 uint64_t qf_get_num_occupied_slots(const QF *qf) {
 	pc_sync(&qf->runtimedata->pc_noccupied_slots);
 	return qf->metadata->noccupied_slots;
