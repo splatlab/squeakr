@@ -225,6 +225,7 @@ extern "C" {
 	uint64_t qf_get_total_size_in_bytes(const QF *qf);
 	uint64_t qf_get_nslots(const QF *qf);
 	uint64_t qf_get_num_occupied_slots(const QF *qf);
+	uint64_t qf_get_num_occupied_slots_approx(const QF *qf);
 
 	/* Bit-sizes info. */
 	uint64_t qf_get_num_key_bits(const QF *qf);
