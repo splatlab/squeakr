@@ -96,7 +96,6 @@ start_read:
 			goto next_read;
 		{
 			__int128_t first = 0;
-			__int128_t first_rev = 0;
 			__int128_t item = 0;
 			for(uint32_t i = 0; i < obj->ksize; i++) { //First kmer
 				uint8_t curr = Kmer::map_base(read[i]);
@@ -111,12 +110,8 @@ start_read:
 				first = first << 2;
 			}
 			first = first >> 2;
-			first_rev = Kmer::reverse_complement(first, obj->ksize);
 
-			if (Kmer::compare_kmers(first, first_rev))
-				item = first;
-			else
-				item = first_rev;
+			item = first;
 
 			/*
 			 * first try and insert in the main QF.
@@ -140,7 +135,6 @@ start_read:
 			}
 
 			uint64_t next = (first << 2) & BITMASK(2 * obj->ksize);
-			uint64_t next_rev = first_rev >> 2;
 
 			for(uint32_t i = obj->ksize; i < read.length(); i++) { //next kmers
 				uint8_t curr = Kmer::map_base(read[i]);
@@ -152,13 +146,7 @@ start_read:
 					goto start_read;
 				}
 				next |= curr;
-				uint64_t tmp = Kmer::reverse_complement_base(curr);
-				tmp <<= (obj->ksize * 2 - 2);
-				next_rev = next_rev | tmp;
-				if (Kmer::compare_kmers(next, next_rev))
-					item = next;
-				else
-					item = next_rev;
+				item = next;
 
 				/*
 				 * first try and insert in the main QF.
@@ -182,7 +170,6 @@ start_read:
 				}
 
 				next = (next << 2) & BITMASK(2*obj->ksize);
-				next_rev = next_rev >> 2;
 			}
 		}
 
